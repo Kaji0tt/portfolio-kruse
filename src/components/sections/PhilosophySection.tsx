@@ -1,5 +1,11 @@
-import { useRef } from 'react';
-import { motion, useInView } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useMotionValueEvent, useTransform } from 'framer-motion';
+
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+// Gap (px) between stacked cards
+const CARD_GAP = 4;
+// Scroll fraction before highlights/cards begin
+const SCROLL_DELAY = 0.12;
 
 const pillars = [
   {
@@ -8,6 +14,7 @@ const pillars = [
     body: 'Understanding people, behavior and learning. Every interface is a conversation between human cognition and digital structure.',
     accent: 'rgba(200,184,154,0.15)',
     glow: 'rgba(200,184,154,0.06)',
+    activeColor: 'rgba(240,237,232,0.92)',
   },
   {
     number: '02',
@@ -15,6 +22,7 @@ const pillars = [
     body: 'Creating emotional, meaningful and beautiful experiences. Design that moves people — aesthetics in service of clarity.',
     accent: 'rgba(212,168,83,0.12)',
     glow: 'rgba(212,168,83,0.05)',
+    activeColor: 'rgba(200,184,154,0.85)',
   },
   {
     number: '03',
@@ -22,23 +30,18 @@ const pillars = [
     body: 'Turning ideas into functional digital systems. Bridging the gap between concept and implementation.',
     accent: 'rgba(130,160,200,0.1)',
     glow: 'rgba(130,160,200,0.04)',
+    activeColor: 'rgba(130,160,200,0.9)',
   },
 ];
 
-function PillarCard({ pillar, index }: { pillar: (typeof pillars)[0]; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: '-15%' });
-
+function PillarCard({ pillar }: { pillar: (typeof pillars)[0] }) {
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 1.0, delay: index * 0.15, ease: [0.16, 1, 0.3, 1] }}
+    <div
       className="relative flex flex-col"
       style={{
         padding: '2px',
         borderRadius: '20px',
+        height: '100%',
         background: `linear-gradient(145deg, rgba(240,237,232,0.06) 0%, transparent 60%)`,
       }}
     >
@@ -102,18 +105,83 @@ function PillarCard({ pillar, index }: { pillar: (typeof pillars)[0]; index: num
           </p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
 export default function PhilosophySection() {
-  const headRef = useRef<HTMLDivElement>(null);
-  const inView = useInView(headRef, { once: true, margin: '-10%' });
+  const sectionRef = useRef<HTMLElement>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
+
+  // -1 = before scroll starts, 0–2 = active card index
+  const [activeIndex, setActiveIndex] = useState(-1);
+  // Measured height of the card container in px
+  const [containerHeight, setContainerHeight] = useState(600);
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end end'],
+  });
+
+  useEffect(() => {
+    const measure = () => {
+      if (cardContainerRef.current) {
+        setContainerHeight(cardContainerRef.current.getBoundingClientRect().height);
+      }
+    };
+    const id = requestAnimationFrame(measure);
+    window.addEventListener('resize', measure);
+    return () => {
+      cancelAnimationFrame(id);
+      window.removeEventListener('resize', measure);
+    };
+  }, []);
+
+  useMotionValueEvent(scrollYProgress, 'change', (latest) => {
+    if (latest < SCROLL_DELAY) {
+      setActiveIndex(-1);
+    } else {
+      const adjusted = (latest - SCROLL_DELAY) / (1 - SCROLL_DELAY);
+      const index = Math.min(Math.floor(adjusted * pillars.length), pillars.length - 1);
+      setActiveIndex(index);
+    }
+  });
+
+  // Heading drifts upward as user scrolls — same responsive feel as FloralogSection
+  const headingY = useTransform(scrollYProgress, [0, 1], [-10, -60]);
+
+  /**
+   * Each visible card (past + active) gets an equal vertical slice of the container.
+   * Past cards dock to the top in order; the active card fills the remaining space.
+   */
+  const getCardAnim = (i: number) => {
+    const h = containerHeight;
+    // Number of currently visible slots (all past cards + active card)
+    const n = Math.max(activeIndex + 1, 1);
+    const slotH = h / n;
+
+    if (activeIndex === -1 || i > activeIndex) {
+      // Future: hidden below container, waiting to enter
+      return { top: h + 20, height: slotH, opacity: 0, zIndex: 0 };
+    }
+
+    if (i < activeIndex) {
+      // Past: equal slice stacked at top, leaving a small gap before the next card
+      return { top: i * slotH, height: slotH - CARD_GAP, opacity: 0.6, zIndex: i + 1 };
+    }
+
+    // Active: fills all remaining space below past cards
+    return { top: activeIndex * slotH, height: h - activeIndex * slotH, opacity: 1, zIndex: 10 };
+  };
 
   return (
     <section
-      className="relative py-40 px-6 overflow-hidden"
-      style={{ background: 'var(--bg-primary)' }}
+      ref={sectionRef}
+      className="relative"
+      style={{
+        height: `${pillars.length * 100}vh`,
+        background: 'var(--bg-primary)',
+      }}
     >
       {/* Ambient glow */}
       <div
@@ -128,73 +196,91 @@ export default function PhilosophySection() {
         }}
       />
 
-      <div className="max-w-6xl mx-auto">
-        {/* Headline */}
-        <div ref={headRef} className="mb-24 max-w-3xl">
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={inView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.8 }}
-            className="mb-8 tracking-widest uppercase"
-            style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em' }}
-          >
-            Design Philosophy
-          </motion.p>
+      {/* Sticky viewport */}
+      <div className="sticky top-0 flex items-center" style={{ height: '100vh' }}>
+        <div className="max-w-6xl mx-auto px-6 w-full grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-center">
 
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              fontSize: 'clamp(32px, 6vw, 80px)',
-              fontWeight: 200,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.0,
-              color: 'rgba(240,237,232,0.9)',
-            }}
-          >
-            DESIGN AT THE
-            <br />
-            <span style={{ color: 'rgba(240,237,232,0.45)' }}>INTERSECTION OF</span>
-            <br />
-            PSYCHOLOGY,
-            <br />
-            <span style={{ color: 'rgba(200,184,154,0.7)' }}>ART</span>
-            <br />
-            <span style={{ color: 'rgba(240,237,232,0.45)' }}>AND</span>{' '}
-            <span style={{ color: 'rgba(130,160,200,0.8)' }}>TECHNOLOGY.</span>
-          </motion.h2>
+          {/* Left: heading — all keywords visible, active one underlined */}
+          <motion.div style={{ y: headingY }}>
+            <p
+              className="mb-8 tracking-widest uppercase"
+              style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em' }}
+            >
+              Design Philosophy
+            </p>
+
+            <h2
+              style={{
+                fontSize: 'clamp(32px, 6vw, 80px)',
+                fontWeight: 200,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.1,
+                color: 'rgba(240,237,232,0.9)',
+              }}
+            >
+              DESIGN AT THE
+              <br />
+              <span style={{ color: 'rgba(240,237,232,0.45)' }}>INTERSECTION OF</span>
+              <br />
+              <span style={{ position: 'relative', display: 'inline-block' }}>
+                PSYCHOLOGY,
+                <motion.span
+                  style={{
+                    position: 'absolute', bottom: -3, left: 0, right: 0,
+                    height: '1.5px', background: 'rgba(240,237,232,0.75)',
+                    transformOrigin: 'left',
+                  }}
+                  animate={{ scaleX: activeIndex === 0 ? 1 : 0, opacity: activeIndex === 0 ? 1 : 0 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                />
+              </span>
+              <br />
+              <span style={{ position: 'relative', display: 'inline-block', color: 'rgba(200,184,154,0.7)' }}>
+                ART
+                <motion.span
+                  style={{
+                    position: 'absolute', bottom: -3, left: 0, right: 0,
+                    height: '1.5px', background: 'rgba(200,184,154,0.8)',
+                    transformOrigin: 'left',
+                  }}
+                  animate={{ scaleX: activeIndex === 1 ? 1 : 0, opacity: activeIndex === 1 ? 1 : 0 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                />
+              </span>
+              <br />
+              {/* AND TECHNOLOGY */}
+              <span style={{ color: 'rgba(240,237,232,0.45)' }}>AND</span>{' '}
+              <span style={{ position: 'relative', display: 'inline-block', color: 'rgba(130,160,200,0.8)' }}>
+                TECHNOLOGY.
+                <motion.span
+                  style={{
+                    position: 'absolute', bottom: -3, left: 0, right: 0,
+                    height: '1.5px', background: 'rgba(130,160,200,0.85)',
+                    transformOrigin: 'left',
+                  }}
+                  animate={{ scaleX: activeIndex === 2 ? 1 : 0, opacity: activeIndex === 2 ? 1 : 0 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                />
+              </span>
+            </h2>
+
+          </motion.div>
+
+          {/* Right: height-based card stack */}
+          <div ref={cardContainerRef} style={{ position: 'relative', height: '70vh' }}>
+            {pillars.map((pillar, i) => (
+              <motion.div
+                key={i}
+                style={{ position: 'absolute', width: '100%', overflow: 'hidden', borderRadius: '18px' }}
+                animate={getCardAnim(i)}
+                transition={{ duration: 0.8, ease: EASE }}
+              >
+                <PillarCard pillar={pillar} />
+              </motion.div>
+            ))}
+          </div>
+
         </div>
-
-        {/* Three pillars */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-28">
-          {pillars.map((pillar, i) => (
-            <PillarCard key={pillar.title} pillar={pillar} index={i} />
-          ))}
-        </div>
-
-        {/* Manifesto statement */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true, margin: '-10%' }}
-          transition={{ duration: 1.2 }}
-          className="max-w-2xl mx-auto text-center"
-        >
-          <p
-            style={{
-              fontSize: 'clamp(16px, 2.5vw, 24px)',
-              fontWeight: 200,
-              color: 'rgba(240,237,232,0.3)',
-              lineHeight: 1.7,
-              letterSpacing: '0.02em',
-            }}
-          >
-            "Good design is not the result of a single discipline. It emerges from the{' '}
-            <span style={{ color: 'rgba(240,237,232,0.7)' }}>tension between logic and intuition</span>,
-            between structure and poetry."
-          </p>
-        </motion.div>
       </div>
     </section>
   );

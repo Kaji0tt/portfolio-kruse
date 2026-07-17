@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import DeviceMockup from '../placeholders/DeviceMockup';
 import ProcessDiagram from '../placeholders/ProcessDiagram';
+
+const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const designDecisions = [
   {
@@ -29,140 +31,74 @@ const iaSteps = [
 ];
 
 const screens = [
-  { label: 'Home', hasTopBar: true, hasBottomBar: true },
-  { label: 'Explore', hasTopBar: true, hasBottomBar: true },
-  { label: 'Plant Detail', hasTopBar: true, hasBottomBar: false },
+  {
+    label: 'Home',
+    eyebrow: 'THE CHALLENGE',
+    headline: '"How do we transform\ninformation into\ncuriosity?"',
+    body: 'Botany contains enormous complexity: thousands of species, scientific relationships and vast amounts of information. The UX challenge was to make knowledge become exploration — to make information create curiosity.',
+    hasTopBar: true,
+    hasBottomBar: true,
+  },
+  {
+    label: 'Explore',
+    eyebrow: 'DISCOVERY',
+    headline: 'Organised by\ncuriosity,\nnot taxonomy.',
+    body: 'Instead of rigid botanical categories, Floralog groups plants by mood and habitat — making browsing feel like wandering through a garden, not a textbook.',
+    hasTopBar: true,
+    hasBottomBar: true,
+  },
+  {
+    label: 'Plant Detail',
+    eyebrow: 'DEPTH ON DEMAND',
+    headline: 'From first glance\nto deep\nknowledge.',
+    body: 'The detail view reveals information progressively. Casual users see beauty; curious ones unlock full botanical data — hierarchy in service of all experience levels.',
+    hasTopBar: true,
+    hasBottomBar: false,
+  },
 ];
 
 export default function FloralogSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const phoneRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const [activeScreen, setActiveScreen] = useState(0);
-  const headInView = useInView(sectionRef, { once: true, margin: '-5%' });
 
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ['start end', 'end start'],
+  // Track scroll within the sticky phone showcase
+  const { scrollYProgress: stickyProgress } = useScroll({
+    target: stickyRef,
+    offset: ['start start', 'end end'],
   });
 
-  const phoneY = useTransform(scrollYProgress, [0, 1], [40, -40]);
-  const phoneRotate = useTransform(scrollYProgress, [0, 0.5, 1], [-3, 0, 3]);
+  const phoneY = useTransform(stickyProgress, [0, 1], [60, -10]);
+  const phoneRotate = useTransform(stickyProgress, [0, 0.5, 1], [-2, 0, 2]);
+  // Title starts above phone, moves further up as phone rises over it
+  const titleY = useTransform(stickyProgress, [0, 1], [-20, -70]);
+  const titleOpacity = useTransform(stickyProgress, [0, 0.4, 1], [1, 0.65, 0.2]);
+
+  useMotionValueEvent(stickyProgress, 'change', (latest) => {
+    const index = Math.min(Math.floor(latest * screens.length), screens.length - 1);
+    setActiveScreen(index);
+  });
 
   return (
     <section
       id="floralog"
       ref={sectionRef}
-      className="relative overflow-hidden"
+      className="relative"
       style={{ background: 'var(--bg-primary)' }}
     >
-      {/* Section intro */}
-      <div className="relative py-32 px-6">
-        {/* Ambient */}
+      {/* Sticky App Screens showcase — title + phone + content all inside */}
+      <div
+        ref={stickyRef}
+        className="relative"
+        style={{ height: `${screens.length * 100}vh` }}
+      >
+        {/* Background */}
         <div
-          className="absolute pointer-events-none"
+          className="absolute pointer-events-none inset-0"
           style={{
-            top: '10%',
-            right: '-5%',
-            width: '600px',
-            height: '600px',
-            background: 'radial-gradient(circle, rgba(80,140,80,0.025) 0%, transparent 65%)',
-            filter: 'blur(80px)',
+            background: 'linear-gradient(180deg, var(--bg-primary) 0%, #0c0f0a 20%, #0c0f0a 80%, var(--bg-primary) 100%)',
           }}
         />
-
-        <div className="max-w-6xl mx-auto">
-          {/* Label */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={headInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.8 }}
-            className="mb-8 tracking-widest uppercase"
-            style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em' }}
-          >
-            Case Study 01
-          </motion.p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-            {/* Title */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={headInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <h2
-                style={{
-                  fontSize: 'clamp(48px, 9vw, 120px)',
-                  fontWeight: 200,
-                  letterSpacing: '-0.03em',
-                  lineHeight: 0.92,
-                  color: 'rgba(240,237,232,0.9)',
-                }}
-              >
-                FLORA
-                <br />
-                <span style={{ color: 'rgba(200,184,154,0.6)' }}>LOG</span>
-              </h2>
-
-              <div className="mt-10">
-                <p
-                  style={{
-                    fontSize: 'clamp(18px, 2.5vw, 28px)',
-                    fontWeight: 200,
-                    color: 'rgba(240,237,232,0.5)',
-                    lineHeight: 1.3,
-                    letterSpacing: '-0.01em',
-                  }}
-                >
-                  TURNING BOTANY
-                  <br />
-                  INTO CURIOSITY.
-                </p>
-              </div>
-            </motion.div>
-
-            {/* Challenge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={headInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 1.0, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="lg:pt-16"
-            >
-              <p
-                className="mb-6 tracking-widest uppercase"
-                style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.2em' }}
-              >
-                The Challenge
-              </p>
-              <p
-                style={{
-                  fontSize: 'clamp(18px, 2vw, 24px)',
-                  fontWeight: 200,
-                  color: 'rgba(240,237,232,0.6)',
-                  lineHeight: 1.6,
-                }}
-              >
-                "How do we transform information into curiosity?"
-              </p>
-              <p
-                className="mt-6"
-                style={{ fontSize: '14px', color: 'rgba(240,237,232,0.3)', lineHeight: 1.8, fontWeight: 300 }}
-              >
-                Botany contains enormous complexity: thousands of species, scientific relationships
-                and vast amounts of information. The UX challenge was to make knowledge become
-                exploration — to make information create curiosity.
-              </p>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-
-      {/* Phone showcase */}
-      <div
-        className="relative py-24 overflow-hidden"
-        style={{
-          background: 'linear-gradient(180deg, var(--bg-primary) 0%, #0c0f0a 50%, var(--bg-primary) 100%)',
-        }}
-      >
         <div
           className="absolute pointer-events-none inset-0"
           style={{
@@ -170,37 +106,106 @@ export default function FloralogSection() {
           }}
         />
 
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            {/* Phone */}
-            <div className="flex-1 flex justify-center">
-              <motion.div ref={phoneRef} style={{ y: phoneY, rotate: phoneRotate }}>
-                <DeviceMockup screens={screens} activeScreen={activeScreen} />
+        {/* Sticky viewport — items-start so content begins near top */}
+        <div className="sticky top-0 flex items-start" style={{ height: '100vh', paddingTop: '80px' }}>
+          <div className="max-w-6xl mx-auto px-6 w-full grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+
+            {/* Left: title in flow at top (like PhilosophySection), phone absolute over it */}
+            <div className="relative" style={{ minHeight: '520px' }}>
+              {/* Title — in normal flow, sits at top */}
+              <motion.div style={{ y: titleY, opacity: titleOpacity }}>
+                <p
+                  style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em', marginBottom: '8px', textTransform: 'uppercase' }}
+                >
+                  Case Study 01
+                </p>
+                <h2
+                  style={{
+                    fontSize: 'clamp(48px, 9vw, 120px)',
+                    fontWeight: 200,
+                    letterSpacing: '-0.03em',
+                    lineHeight: 0.92,
+                    color: 'rgba(240,237,232,0.9)',
+                  }}
+                >
+                  FLORA<span style={{ color: 'rgba(200,184,154,0.6)' }}>LOG</span>
+                </h2>
+                <p
+                  style={{
+                    fontSize: 'clamp(16px, 2vw, 22px)',
+                    fontWeight: 200,
+                    color: 'rgba(240,237,232,0.4)',
+                    lineHeight: 1.3,
+                    letterSpacing: '-0.01em',
+                    marginTop: '4px',
+                  }}
+                >
+                  TURNING BOTANY INTO CURIOSITY.
+                </p>
               </motion.div>
+
+              {/* Phone — absolute, centered horizontally, overlaps title from below */}
+              <div style={{ position: 'absolute', top: '60px', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2 }}>
+                <motion.div style={{ y: phoneY, rotate: phoneRotate, scale: 0.82 }}>
+                  <DeviceMockup screens={screens} activeScreen={activeScreen} />
+                </motion.div>
+              </div>
             </div>
 
-            {/* Screen selector + info */}
-            <div className="flex-1">
-              <p
-                className="mb-8 tracking-widest uppercase"
-                style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em' }}
-              >
-                App Screens
-              </p>
+            {/* Right: animated content + screen selector below */}
+            <div>
+              {/* Animated content — Challenge-style typography */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeScreen}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.65, ease: EASE }}
+                >
+                  <p
+                    className="mb-6 tracking-widest uppercase"
+                    style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.2em' }}
+                  >
+                    {screens[activeScreen].eyebrow}
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 'clamp(18px, 2vw, 24px)',
+                      fontWeight: 200,
+                      color: 'rgba(240,237,232,0.6)',
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {screens[activeScreen].headline}
+                  </p>
+                  <p
+                    className="mt-6"
+                    style={{ fontSize: '14px', color: 'rgba(240,237,232,0.3)', lineHeight: 1.8, fontWeight: 300 }}
+                  >
+                    {screens[activeScreen].body}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
 
-              <div className="flex flex-col gap-3">
+              {/* Numbered screen buttons below content */}
+              <div className="flex flex-col gap-3" style={{ marginTop: '64px' }}>
+                <p
+                  className="mb-4 tracking-widest uppercase"
+                  style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em' }}
+                >
+                  App Screens
+                </p>
                 {screens.map((screen, i) => (
                   <motion.button
                     key={screen.label}
                     onClick={() => setActiveScreen(i)}
                     whileHover={{ x: 4 }}
-                    className="flex items-center gap-4 text-left p-4 rounded-xl cursor-pointer transition-all duration-300"
+                    className="flex items-center gap-4 text-left p-4 rounded-xl cursor-pointer"
                     style={{
-                      background:
-                        activeScreen === i
-                          ? 'rgba(240,237,232,0.04)'
-                          : 'transparent',
+                      background: activeScreen === i ? 'rgba(240,237,232,0.04)' : 'transparent',
                       border: `1px solid ${activeScreen === i ? 'rgba(240,237,232,0.08)' : 'transparent'}`,
+                      transition: 'background 0.3s ease, border-color 0.3s ease',
                     }}
                   >
                     <span
@@ -234,6 +239,7 @@ export default function FloralogSection() {
                 ))}
               </div>
             </div>
+
           </div>
         </div>
       </div>
