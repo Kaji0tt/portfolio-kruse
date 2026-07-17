@@ -4,6 +4,7 @@ interface Screen {
   label: string;
   hasTopBar?: boolean;
   hasBottomBar?: boolean;
+  image?: string;
 }
 
 const defaultScreens: Screen[] = [
@@ -70,130 +71,162 @@ export default function DeviceMockup({
           <div
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(160deg, #0f1410 0%, #0a0d0f 50%, #0d0a0f 100%)',
+              background: screen.image
+                ? '#000'
+                : 'linear-gradient(160deg, #0f1410 0%, #0a0d0f 50%, #0d0a0f 100%)',
             }}
           >
-            {/* Status bar */}
-            {screen.hasTopBar && (
-              <div className="flex items-center justify-between px-6 pt-14 pb-2">
-                <span style={{ fontSize: '11px', color: 'rgba(240,237,232,0.7)', fontWeight: 600 }}>
-                  9:41
-                </span>
-                <div className="flex items-center gap-1">
-                  {[3, 2, 1].map((i) => (
-                    <div
-                      key={i}
-                      className="rounded-sm"
+            {screens.some(s => s.image) ? (
+              /* All images rendered at once so browser preloads them — only active is visible */
+              <>
+                {screens.map((s, i) => s.image && (
+                  <motion.div
+                    key={s.image}
+                    className="absolute inset-0"
+                    style={{ padding: '10px' }}
+                    animate={{ opacity: i === activeScreen ? 1 : 0 }}
+                    transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <img
+                      src={s.image}
+                      alt={s.label}
                       style={{
-                        width: '3px',
-                        height: `${4 + i * 2}px`,
-                        background: `rgba(240,237,232,${0.2 + i * 0.2})`,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        objectPosition: 'center top',
+                        borderRadius: '32px',
+                        display: 'block',
                       }}
                     />
-                  ))}
-                  <div
-                    className="ml-1 rounded-sm"
-                    style={{ width: '18px', height: '9px', border: '1px solid rgba(240,237,232,0.4)', padding: '1px' }}
-                  >
+                  </motion.div>
+                ))}
+              </>
+            ) : (
+              <>
+                {/* Status bar */}
+                {screen.hasTopBar && (
+                  <div className="flex items-center justify-between px-6 pt-14 pb-2">
+                    <span style={{ fontSize: '11px', color: 'rgba(240,237,232,0.7)', fontWeight: 600 }}>
+                      9:41
+                    </span>
+                    <div className="flex items-center gap-1">
+                      {[3, 2, 1].map((i) => (
+                        <div
+                          key={i}
+                          className="rounded-sm"
+                          style={{
+                            width: '3px',
+                            height: `${4 + i * 2}px`,
+                            background: `rgba(240,237,232,${0.2 + i * 0.2})`,
+                          }}
+                        />
+                      ))}
+                      <div
+                        className="ml-1 rounded-sm"
+                        style={{ width: '18px', height: '9px', border: '1px solid rgba(240,237,232,0.4)', padding: '1px' }}
+                      >
+                        <div
+                          className="h-full rounded-sm"
+                          style={{ width: '75%', background: 'rgba(240,237,232,0.7)' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* App content placeholder */}
+                <div className="px-4 py-3 flex flex-col gap-3">
+                  {/* Header bar */}
+                  <div className="flex items-center justify-between">
                     <div
-                      className="h-full rounded-sm"
-                      style={{ width: '75%', background: 'rgba(240,237,232,0.7)' }}
+                      className="h-5 rounded-full"
+                      style={{ width: '100px', background: 'rgba(240,237,232,0.08)' }}
+                    />
+                    <div
+                      className="h-7 w-7 rounded-full"
+                      style={{ background: 'rgba(240,237,232,0.06)' }}
                     />
                   </div>
-                </div>
-              </div>
-            )}
 
-            {/* App content placeholder */}
-            <div className="px-4 py-3 flex flex-col gap-3">
-              {/* Header bar */}
-              <div className="flex items-center justify-between">
-                <div
-                  className="h-5 rounded-full"
-                  style={{ width: '100px', background: 'rgba(240,237,232,0.08)' }}
-                />
-                <div
-                  className="h-7 w-7 rounded-full"
-                  style={{ background: 'rgba(240,237,232,0.06)' }}
-                />
-              </div>
-
-              {/* Hero image placeholder */}
-              <div
-                className="rounded-2xl overflow-hidden"
-                style={{
-                  height: '180px',
-                  background: 'linear-gradient(145deg, rgba(200,184,154,0.08) 0%, rgba(212,168,83,0.05) 100%)',
-                  border: '1px solid rgba(240,237,232,0.04)',
-                }}
-              >
-                <div
-                  className="w-full h-full flex items-center justify-center"
-                  style={{
-                    backgroundImage: `radial-gradient(circle at 40% 60%, rgba(212,168,83,0.06) 0%, transparent 60%)`,
-                  }}
-                >
-                  <span
-                    style={{ fontSize: '9px', color: 'rgba(240,237,232,0.12)', letterSpacing: '0.2em' }}
-                  >
-                    {screen.label.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-
-              {/* Content rows */}
-              {[90, 70, 80, 60].map((w, i) => (
-                <div key={i} className="flex gap-2 items-center">
+                  {/* Hero image placeholder */}
                   <div
-                    className="h-1.5 rounded-full"
-                    style={{ width: `${w}%`, background: `rgba(240,237,232,${0.04 + i * 0.01})` }}
-                  />
-                </div>
-              ))}
-
-              {/* Card grid */}
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                {[1, 2, 3, 4].map((i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl"
+                    className="rounded-2xl overflow-hidden"
                     style={{
-                      height: '80px',
-                      background: `linear-gradient(145deg, rgba(240,237,232,0.04) 0%, rgba(240,237,232,0.02) 100%)`,
+                      height: '180px',
+                      background: 'linear-gradient(145deg, rgba(200,184,154,0.08) 0%, rgba(212,168,83,0.05) 100%)',
                       border: '1px solid rgba(240,237,232,0.04)',
                     }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Bottom navigation */}
-            {screen.hasBottomBar && (
-              <div
-                className="absolute bottom-0 left-0 right-0 flex justify-around items-center py-4 px-6"
-                style={{
-                  background: 'rgba(10,10,10,0.9)',
-                  backdropFilter: 'blur(20px)',
-                  borderTop: '1px solid rgba(240,237,232,0.04)',
-                  paddingBottom: '28px',
-                }}
-              >
-                {['⊙', '◯', '△', '☰'].map((icon, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-col items-center gap-1"
                   >
-                    <span
+                    <div
+                      className="w-full h-full flex items-center justify-center"
                       style={{
-                        fontSize: '16px',
-                        color: i === 0 ? 'rgba(212,168,83,0.8)' : 'rgba(240,237,232,0.2)',
+                        backgroundImage: `radial-gradient(circle at 40% 60%, rgba(212,168,83,0.06) 0%, transparent 60%)`,
                       }}
                     >
-                      {icon}
-                    </span>
+                      <span
+                        style={{ fontSize: '9px', color: 'rgba(240,237,232,0.12)', letterSpacing: '0.2em' }}
+                      >
+                        {screen.label.toUpperCase()}
+                      </span>
+                    </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Content rows */}
+                  {[90, 70, 80, 60].map((w, i) => (
+                    <div key={i} className="flex gap-2 items-center">
+                      <div
+                        className="h-1.5 rounded-full"
+                        style={{ width: `${w}%`, background: `rgba(240,237,232,${0.04 + i * 0.01})` }}
+                      />
+                    </div>
+                  ))}
+
+                  {/* Card grid */}
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div
+                        key={i}
+                        className="rounded-xl"
+                        style={{
+                          height: '80px',
+                          background: `linear-gradient(145deg, rgba(240,237,232,0.04) 0%, rgba(240,237,232,0.02) 100%)`,
+                          border: '1px solid rgba(240,237,232,0.04)',
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bottom navigation */}
+                {screen.hasBottomBar && (
+                  <div
+                    className="absolute bottom-0 left-0 right-0 flex justify-around items-center py-4 px-6"
+                    style={{
+                      background: 'rgba(10,10,10,0.9)',
+                      backdropFilter: 'blur(20px)',
+                      borderTop: '1px solid rgba(240,237,232,0.04)',
+                      paddingBottom: '28px',
+                    }}
+                  >
+                    {['⊙', '◯', '△', '☰'].map((icon, i) => (
+                      <div
+                        key={i}
+                        className="flex flex-col items-center gap-1"
+                      >
+                        <span
+                          style={{
+                            fontSize: '16px',
+                            color: i === 0 ? 'rgba(212,168,83,0.8)' : 'rgba(240,237,232,0.2)',
+                          }}
+                        >
+                          {icon}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

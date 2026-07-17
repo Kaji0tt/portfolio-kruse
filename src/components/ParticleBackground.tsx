@@ -30,13 +30,13 @@ export default function ParticleBackground() {
     };
 
     const createParticles = () => {
-      const count = Math.floor((canvas.width * canvas.height) / 14000);
+      const count = Math.floor((canvas.width * canvas.height) / 8000);
       particlesRef.current = Array.from({ length: count }, () => ({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
         vx: (Math.random() - 0.5) * 0.18,
         vy: (Math.random() - 0.5) * 0.18,
-        radius: Math.random() * 1.2 + 0.2,
+        radius: Math.random() * 1.6 + 0.5,
         opacity: Math.random() * 0.4 + 0.05,
         opacityDir: Math.random() > 0.5 ? 1 : -1,
         hue: Math.random() * 30 + 20, // warm amber/gold tones
@@ -124,8 +124,8 @@ export default function ParticleBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="absolute inset-0 w-full h-full pointer-events-none"
-      style={{ opacity: 0.7 }}
+      className="pointer-events-none"
+      style={{ opacity: 0.7, position: 'fixed', inset: 0, width: '100%', height: '100%', zIndex: 0 }}
     />
   );
 }

@@ -54,7 +54,7 @@ export default function FordecodeSection() {
         }}
       />
 
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-[1920px] mx-auto px-12">
         {/* Header */}
         <div ref={headRef} className="mb-24">
           <motion.p

@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
-import ParticleBackground from '../ParticleBackground';
 
 const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
@@ -35,9 +34,8 @@ export default function HeroSection() {
     <section
       id="intro"
       className="relative flex flex-col items-center justify-center overflow-hidden"
-      style={{ minHeight: '100vh', background: 'var(--bg-primary)' }}
+      style={{ minHeight: '100vh' }}
     >
-      <ParticleBackground />
 
       {/* Radial glow */}
       <div
@@ -60,7 +58,7 @@ export default function HeroSection() {
             className="tracking-widest uppercase"
             style={{ fontSize: '10px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.35em' }}
           >
-            Portfolio 2025
+            Portfolio {new Date().getFullYear()}
           </span>
         </motion.div>
 
@@ -120,7 +118,7 @@ export default function HeroSection() {
               fontWeight: 300,
             }}
           >
-            Creative Technologist
+            Creative Engineer
           </p>
         </motion.div>
 
@@ -133,8 +131,8 @@ export default function HeroSection() {
             'MEETS',
             'DIGITAL',
             'POSSIBILITY,',
-            'DESIGN',
-            'BEGINS.',
+            'IMAGINATION',
+            'LEADS.',
           ].map((word) => (
             <span
               key={word}
@@ -144,7 +142,7 @@ export default function HeroSection() {
                 fontWeight: 200,
                 letterSpacing: '-0.01em',
                 color:
-                  word === 'DESIGN' || word === 'BEGINS.'
+                  word === 'IMAGINATION' || word === 'LEADS.'
                     ? 'rgba(240,237,232,0.9)'
                     : word === 'CURIOSITY' || word === 'POSSIBILITY,'
                     ? 'rgba(200,184,154,0.7)'

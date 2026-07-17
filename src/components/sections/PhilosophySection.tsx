@@ -4,6 +4,10 @@ import { motion, useScroll, useMotionValueEvent, useTransform } from 'framer-mot
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 // Gap (px) between stacked cards
 const CARD_GAP = 4;
+// Fixed height (px) for collapsed past cards — enough to show number + title start
+const PAST_HEIGHT = 88;
+// Minimum height per card to display full content; below this threshold compact mode activates
+const CARD_MIN_FULL_HEIGHT = 220;
 // Scroll fraction before highlights/cards begin
 const SCROLL_DELAY = 0.12;
 
@@ -11,7 +15,7 @@ const pillars = [
   {
     number: '01',
     title: 'PSYCHOLOGY',
-    body: 'Understanding people, behavior and learning. Every interface is a conversation between human cognition and digital structure.',
+    body: 'My background in psychology gives me a framework for understanding why people make the decisions they do — and how to design interactions that work with those patterns, not against them.',
     accent: 'rgba(200,184,154,0.15)',
     glow: 'rgba(200,184,154,0.06)',
     activeColor: 'rgba(240,237,232,0.92)',
@@ -19,7 +23,7 @@ const pillars = [
   {
     number: '02',
     title: 'ART',
-    body: 'Creating emotional, meaningful and beautiful experiences. Design that moves people — aesthetics in service of clarity.',
+    body: 'Working in art before design taught me that structure isn\'t the opposite of expression — it\'s what makes expression land. I bring that eye for visual tension and balance to every project.',
     accent: 'rgba(212,168,83,0.12)',
     glow: 'rgba(212,168,83,0.05)',
     activeColor: 'rgba(200,184,154,0.85)',
@@ -27,7 +31,7 @@ const pillars = [
   {
     number: '03',
     title: 'TECHNOLOGY',
-    body: 'Turning ideas into functional digital systems. Bridging the gap between concept and implementation.',
+    body: 'I understand how digital systems are built — from UI to architecture. That gives me a precise language for working with AI: turning vision and intent into tailored user experiences, without losing anything in translation.',
     accent: 'rgba(130,160,200,0.1)',
     glow: 'rgba(130,160,200,0.04)',
     activeColor: 'rgba(130,160,200,0.9)',
@@ -49,7 +53,7 @@ function PillarCard({ pillar }: { pillar: (typeof pillars)[0] }) {
         className="relative rounded-[19px] flex flex-col h-full overflow-hidden"
         style={{
           background: `linear-gradient(145deg, ${pillar.glow} 0%, rgba(12,12,12,0.95) 60%)`,
-          padding: '40px 36px',
+          padding: 'clamp(28px, 4vh, 64px) clamp(24px, 3vw, 56px)',
           border: '1px solid rgba(240,237,232,0.05)',
         }}
       >
@@ -68,35 +72,43 @@ function PillarCard({ pillar }: { pillar: (typeof pillars)[0] }) {
 
         <div className="relative z-10 flex flex-col flex-1">
           <span
-            className="mb-6 tracking-widest"
-            style={{ fontSize: '11px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.2em' }}
+            style={{
+              fontSize: 'clamp(10px, 1vw, 14px)',
+              color: 'rgba(240,237,232,0.2)',
+              letterSpacing: '0.2em',
+              marginBottom: 'clamp(16px, 2.5vh, 32px)',
+            }}
           >
             {pillar.number}
           </span>
 
           <h3
-            className="mb-6"
             style={{
-              fontSize: 'clamp(28px, 4vw, 48px)',
+              fontSize: 'clamp(28px, 4vw, 56px)',
               fontWeight: 200,
               letterSpacing: '-0.01em',
               color: 'rgba(240,237,232,0.9)',
               lineHeight: 1.0,
+              marginBottom: 'clamp(16px, 2.5vh, 32px)',
             }}
           >
             {pillar.title}
           </h3>
 
           <div
-            className="mb-6"
-            style={{ width: '28px', height: '1px', background: 'rgba(240,237,232,0.12)' }}
+            style={{
+              width: 'clamp(24px, 2vw, 40px)',
+              height: '1px',
+              background: 'rgba(240,237,232,0.12)',
+              marginBottom: 'clamp(16px, 2.5vh, 32px)',
+            }}
           />
 
           <p
             style={{
-              fontSize: '14px',
+              fontSize: 'clamp(14px, 1.2vw, 20px)',
               color: 'rgba(240,237,232,0.4)',
-              lineHeight: 1.8,
+              lineHeight: 1.75,
               fontWeight: 300,
               flex: 1,
             }}
@@ -156,22 +168,31 @@ export default function PhilosophySection() {
    */
   const getCardAnim = (i: number) => {
     const h = containerHeight;
-    // Number of currently visible slots (all past cards + active card)
-    const n = Math.max(activeIndex + 1, 1);
-    const slotH = h / n;
+    // Use equal-slot layout only when the container is tall enough to show all cards fully
+    const fullHeightNeeded = pillars.length * CARD_MIN_FULL_HEIGHT + (pillars.length - 1) * CARD_GAP;
+    const useEqualSlots = h >= fullHeightNeeded;
 
     if (activeIndex === -1 || i > activeIndex) {
-      // Future: hidden below container, waiting to enter
+      const slotH = useEqualSlots ? h / Math.max(activeIndex + 1, 1) : PAST_HEIGHT;
       return { top: h + 20, height: slotH, opacity: 0, zIndex: 0 };
     }
 
-    if (i < activeIndex) {
-      // Past: equal slice stacked at top, leaving a small gap before the next card
-      return { top: i * slotH, height: slotH - CARD_GAP, opacity: 0.6, zIndex: i + 1 };
+    if (useEqualSlots) {
+      // Original design: equal vertical slices
+      const n = Math.max(activeIndex + 1, 1);
+      const slotH = h / n;
+      if (i < activeIndex) {
+        return { top: i * slotH, height: slotH - CARD_GAP, opacity: 0.6, zIndex: i + 1 };
+      }
+      return { top: activeIndex * slotH, height: h - activeIndex * slotH, opacity: 1, zIndex: 10 };
+    } else {
+      // Compact mode: past cards are fixed-height strips, active card fills remaining space
+      if (i < activeIndex) {
+        return { top: i * (PAST_HEIGHT + CARD_GAP), height: PAST_HEIGHT, opacity: 0.6, zIndex: i + 1 };
+      }
+      const pastOffset = activeIndex * (PAST_HEIGHT + CARD_GAP);
+      return { top: pastOffset, height: Math.max(h - pastOffset, PAST_HEIGHT * 2), opacity: 1, zIndex: 10 };
     }
-
-    // Active: fills all remaining space below past cards
-    return { top: activeIndex * slotH, height: h - activeIndex * slotH, opacity: 1, zIndex: 10 };
   };
 
   return (
@@ -180,7 +201,7 @@ export default function PhilosophySection() {
       className="relative"
       style={{
         height: `${pillars.length * 100}vh`,
-        background: 'var(--bg-primary)',
+        background: 'transparent',
       }}
     >
       {/* Ambient glow */}
@@ -198,7 +219,7 @@ export default function PhilosophySection() {
 
       {/* Sticky viewport */}
       <div className="sticky top-0 flex items-center" style={{ height: '100vh' }}>
-        <div className="max-w-6xl mx-auto px-6 w-full grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-center">
+        <div className="max-w-[1920px] mx-auto px-12 w-full grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-center">
 
           {/* Left: heading — all keywords visible, active one underlined */}
           <motion.div style={{ y: headingY }}>
@@ -271,9 +292,13 @@ export default function PhilosophySection() {
             {pillars.map((pillar, i) => (
               <motion.div
                 key={i}
-                style={{ position: 'absolute', width: '100%', overflow: 'hidden', borderRadius: '18px' }}
+                style={{
+                  position: 'absolute', width: '100%', overflow: 'hidden', borderRadius: '18px',
+                  cursor: i < activeIndex ? 'pointer' : 'default',
+                }}
                 animate={getCardAnim(i)}
                 transition={{ duration: 0.8, ease: EASE }}
+                onClick={() => { if (i < activeIndex) setActiveIndex(i); }}
               >
                 <PillarCard pillar={pillar} />
               </motion.div>

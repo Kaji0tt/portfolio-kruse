@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 const navItems = [
   { id: '01', label: 'INTRO', section: 'intro' },
   { id: '02', label: 'FLORALOG', section: 'floralog' },
-  { id: '03', label: 'FÖRDE-CODE', section: 'forde-code' },
-  { id: '04', label: 'AI WORKFLOW', section: 'ai-workflow' },
+  { id: '03', label: 'AI WORKFLOW', section: 'ai-workflow' },
+  { id: '04', label: 'CLOSING', section: 'closing' },
 ];
 
 export default function FloatingNav() {
@@ -37,8 +37,23 @@ export default function FloatingNav() {
 
   const scrollTo = (sectionId: string) => {
     const el = document.getElementById(sectionId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
+    if (!el) return;
+
+    // For closing: jump to end of section so the fully assembled state is shown.
+    // For all others: jump to the start of the section.
+    const targetY =
+      sectionId === 'closing'
+        ? el.offsetTop + el.scrollHeight - window.innerHeight
+        : el.offsetTop;
+
+    const lenis = (window as unknown as Record<string, unknown>).__lenis as
+      | { scrollTo: (target: number, opts: object) => void }
+      | undefined;
+
+    if (lenis) {
+      lenis.scrollTo(targetY, { duration: 0, immediate: true });
+    } else {
+      window.scrollTo(0, targetY);
     }
   };
 
