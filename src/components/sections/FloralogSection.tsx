@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
-import { Compass } from 'lucide-react';
+import { Compass, TrendingUp } from 'lucide-react';
 import DeviceMockup from '../placeholders/DeviceMockup';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
@@ -30,6 +30,25 @@ const iaSteps = [
   { label: 'Learning Experience', description: 'Progressive disclosure and knowledge retention' },
 ];
 
+const flowNodes = [
+  { id: 'home',       label: 'HOME',       x: 47, y: 50, size: 52, isOrigin: true,  count: null },
+  { id: 'scannen',    label: 'SCANNEN',    x: 47, y: 12, size: 40, isOrigin: false, count: 89 },
+  { id: 'entdecken',  label: 'ENTDECKEN',  x: 82, y: 30, size: 36, isOrigin: false, count: 62 },
+  { id: 'kollektion', label: 'KOLLEKTION', x: 78, y: 72, size: 34, isOrigin: false, count: 41 },
+  { id: 'profil',     label: 'PROFIL',     x: 20, y: 74, size: 30, isOrigin: false, count: 16 },
+  { id: 'suche',      label: 'SUCHE',      x: 12, y: 34, size: 32, isOrigin: false, count: 10 },
+];
+
+const flowEdges = [
+  { from: 'home', to: 'scannen',    weight: 89 },
+  { from: 'home', to: 'entdecken',  weight: 62 },
+  { from: 'home', to: 'kollektion', weight: 41 },
+  { from: 'home', to: 'profil',     weight: 16 },
+  { from: 'home', to: 'suche',      weight: 10 },
+];
+
+const MAX_FLOW = 89;
+
 const screens = [
   {
     label: 'Home',
@@ -44,7 +63,7 @@ const screens = [
     label: 'Explore',
     eyebrow: 'DISCOVERY',
     headline: 'Organised by\ncuriosity,\nnot taxonomy.',
-    body: 'At the heart of the experience is a digital companion — a mascot that builds personality, forms emotional attachment, and shares the player\'s curiosity. It doesn\'t instruct. It discovers alongside you, and in doing so, becomes the invitation to explore further.',
+    body: 'At the heart of the experience is a digital companion. A mascot that builds personality, forms attachment, and shares the player\'s curiosity. It doesn\'t instruct. It discovers alongside you. \n But curiosity is not just designed for — it is measured. Where users choose to navigate next becomes signal, and that signal feeds directly into product decisions and every iteration of the design process.',
     hasTopBar: false,
     hasBottomBar: false,
     image: '/Screen2.png',
@@ -85,8 +104,10 @@ export default function FloralogSection() {
   const stickyRef = useRef<HTMLDivElement>(null);
   const [activeScreen, setActiveScreen] = useState(0);
   const [hoveredStep, setHoveredStep] = useState<number | null>(null);
-  const [pingTriggers, setPingTriggers] = useState([0, 0, 0, 0]);
+  const [pingTriggers, setPingTriggers] = useState([0, 0, 0, 0, 0]);
   const prevActiveScreen = useRef(-1);
+  const [flowVisible, setFlowVisible] = useState(false);
+  const prevFlowVisible = useRef(false);
   const [phoneScale, setPhoneScale] = useState(0.82);
 
   useEffect(() => {
@@ -142,6 +163,15 @@ export default function FloralogSection() {
       } else if (index === 2) {
         setPingTriggers(t => { const n = [...t]; n[3]++; return n; });
       }
+    }
+    // Flow dots appear halfway between Explore (1/3) and Plant Detail (2/3) at progress 0.5
+    if (latest >= 0.5 && !prevFlowVisible.current) {
+      setPingTriggers(t => { const n = [...t]; n[4]++; return n; });
+      setFlowVisible(true);
+      prevFlowVisible.current = true;
+    } else if (latest < 1 / 3 && prevFlowVisible.current) {
+      setFlowVisible(false);
+      prevFlowVisible.current = false;
     }
     setActiveScreen(index);
   });
@@ -247,6 +277,32 @@ export default function FloralogSection() {
                 </motion.div>
               </div>
 
+              {/* Info circle 05 — Explore, same position as 01, appears with flowVisible */}
+              <div style={{ position: 'absolute', bottom: '110px', right: 0, zIndex: 4, pointerEvents: (flowVisible && activeScreen === 1) ? 'auto' : 'none' }}>
+                <motion.div
+                  animate={{ opacity: (flowVisible && activeScreen === 1) ? 1 : 0, y: (flowVisible && activeScreen === 1) ? 0 : 8 }}
+                  transition={{ duration: 0.5, ease: EASE }}
+                  style={{ position: 'relative' }}
+                  onMouseEnter={() => setHoveredStep(4)}
+                  onMouseLeave={() => setHoveredStep(null)}
+                >
+                  <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.28)', background: 'rgba(12,12,12,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', position: 'relative' }}>
+                    <PingRing trigger={pingTriggers[4]} />
+                    <motion.span animate={{ opacity: hoveredStep === 4 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>04</motion.span>
+                    <motion.span animate={{ opacity: hoveredStep === 4 ? 1 : 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}><TrendingUp size={20} color="rgba(240,237,232,0.6)" strokeWidth={1.5} /></motion.span>
+                    <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 70%)' }} />
+                  </div>
+                  <motion.div
+                    animate={{ opacity: hoveredStep === 4 ? 1 : 0, y: hoveredStep === 4 ? 0 : 4 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '12px 16px', width: '210px', pointerEvents: 'none' }}
+                  >
+                    <p style={{ fontSize: '12px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '3px' }}>USER FLOW INSIGHTS</p>
+                    <p style={{ fontSize: '11px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.5 }}>Navigation patterns made measurable, feeding directly into the iterative design process.</p>
+                  </motion.div>
+                </motion.div>
+              </div>
+
               {/* IA Step 2 — Home, just left of phone | Tooltip: below, extends right */}
               <div style={{ position: 'absolute', top: '42%', left: 'calc(50% - 185px)', transform: 'translateY(-50%)', zIndex: 4, pointerEvents: activeScreen === 0 ? 'auto' : 'none' }}>
                 <motion.div
@@ -310,7 +366,7 @@ export default function FloralogSection() {
                 >
                   <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.28)', background: 'rgba(12,12,12,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', position: 'relative' }}>
                     <PingRing trigger={pingTriggers[3]} />
-                    <motion.span animate={{ opacity: hoveredStep === 3 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>04</motion.span>
+                    <motion.span animate={{ opacity: hoveredStep === 3 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>05</motion.span>
                     <motion.span animate={{ opacity: hoveredStep === 3 ? 1 : 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', fontSize: '20px', color: 'rgba(240,237,232,0.6)', zIndex: 1 }}>◎</motion.span>
                     <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 70%)' }} />
                   </div>
@@ -442,7 +498,7 @@ export default function FloralogSection() {
 
           </div>
 
-          {/* CSV Data panel — sticky-viewport absolute: bottom-right corner, left edge = right col start */}
+          {/* CSV Data panel — Screen 0 (Home): taxonomy data */}
           <motion.div
             animate={{ opacity: activeScreen === 0 ? 1 : 0, y: activeScreen === 0 ? 0 : 10 }}
             transition={{ duration: 0.6, ease: EASE }}
@@ -462,13 +518,11 @@ export default function FloralogSection() {
               fontSize: '10px',
               lineHeight: 1.75,
             }}>
-              {/* Header */}
               <div style={{ display: 'grid', gridTemplateColumns: '2.8rem 1fr 1fr 1fr 1fr', gap: '0 16px', marginBottom: '4px', borderBottom: '1px solid rgba(240,237,232,0.06)', paddingBottom: '4px' }}>
                 {['#', 'genus', 'scientific', 'family', 'category'].map((h) => (
                   <span key={h} style={{ color: 'rgba(200,184,154,0.45)', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '9px' }}>{h}</span>
                 ))}
               </div>
-              {/* Rows */}
               {[
                 [385, 'Ruhmeskrone',    'Gloriosa',      'Colchicaceae',    'Blumen'],
                 [384, 'Ballonblume',    'Platycodon',    'Campanulaceae',   'Blumen'],
@@ -501,6 +555,104 @@ export default function FloralogSection() {
               ))}
             </div>
           </motion.div>
+
+          {/* KPI image panel — Screen 1 (Explore): user flow data */}
+          <motion.div
+            animate={{ opacity: activeScreen === 1 ? 1 : 0, y: activeScreen === 1 ? 0 : 10 }}
+            transition={{ duration: 0.6, ease: EASE }}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              left: '50%',
+              zIndex: 3,
+              pointerEvents: 'none',
+              maskImage: 'linear-gradient(to top, black 0%, black 86%, rgba(0,0,0,0.4) 96%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to top, black 0%, black 86%, rgba(0,0,0,0.4) 96%, transparent 100%)',
+            }}
+          >
+            {/* Diagram inner div — no key remount; flowVisible drives node animation */}
+            <div style={{ position: 'relative', height: '340px', width: '100%', isolation: 'isolate' }}>
+              <span style={{ position: 'absolute', top: '6px', left: '6px', fontSize: '7px', color: 'rgba(240,237,232,0.12)', letterSpacing: '0.25em', textTransform: 'uppercase' }}>
+                USER FLOW · HOME →
+              </span>
+              {/* Connection lines — motion.g handles opacity; CSS @keyframes animates flowing dashes without touching % coords */}
+              <svg style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: -1 }}>
+                <defs>
+                  <style>{`
+                    @keyframes floralogDashFlow {
+                      from { stroke-dashoffset: 16; }
+                      to   { stroke-dashoffset: 0; }
+                    }
+                  `}</style>
+                </defs>
+                {flowEdges.map((edge, i) => {
+                  const from = flowNodes.find(n => n.id === edge.from)!;
+                  const to   = flowNodes.find(n => n.id === edge.to)!;
+                  const isFlowing = edge.to === 'scannen' || edge.to === 'entdecken';
+                  const lineOpacity = 0.06 + (edge.weight / MAX_FLOW) * 0.28;
+                  return (
+                    <motion.g
+                      key={i}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: flowVisible ? 1 : 0 }}
+                      transition={{ duration: 0.6, delay: flowVisible ? 0.3 + i * 0.1 : 0 }}
+                    >
+                      <line
+                        x1={`${from.x}%`} y1={`${from.y}%`}
+                        x2={`${to.x}%`}   y2={`${to.y}%`}
+                        stroke="rgba(160,200,140,1)"
+                        strokeOpacity={lineOpacity}
+                        strokeWidth={0.5 + (edge.weight / MAX_FLOW) * 1.2}
+                        strokeDasharray="3 6"
+                        style={isFlowing && flowVisible ? { animation: 'floralogDashFlow 1.2s linear infinite' } : undefined}
+                      />
+                    </motion.g>
+                  );
+                })}
+              </svg>
+              {/* Nodes — plain div anchors the translate; motion.div inside animates scale without overriding it */}
+              {flowNodes.map((node, i) => (
+                <div
+                  key={node.id}
+                  style={{ position: 'absolute', left: `${node.x}%`, top: `${node.y}%`, transform: 'translate(-50%, -50%)' }}
+                >
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.6 }}
+                    animate={{ opacity: flowVisible ? 1 : 0, scale: flowVisible ? 1 : 0.6 }}
+                    transition={{ duration: flowVisible ? 0.5 : 0.2, delay: flowVisible ? 0.05 * i : 0, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                  <div style={{
+                    width: `${node.size}px`,
+                    height: `${node.size}px`,
+                    borderRadius: '50%',
+                    background: node.isOrigin ? 'rgba(18,14,8,0.92)' : 'rgba(8,14,10,0.92)',
+                    border: `1px solid ${node.isOrigin ? 'rgba(212,168,83,0.45)' : 'rgba(160,200,140,0.18)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                  }}>
+                    <div style={{
+                      position: 'absolute', inset: 0, borderRadius: '50%',
+                      background: `radial-gradient(circle, ${node.isOrigin ? 'rgba(212,168,83,0.12)' : 'rgba(160,200,140,0.07)'} 0%, transparent 70%)`,
+                    }} />
+                    {node.isOrigin
+                      ? <span style={{ fontSize: '14px', color: 'rgba(212,168,83,0.6)', position: 'relative', zIndex: 1 }}>◎</span>
+                      : <span style={{ fontSize: '11px', color: 'rgba(160,200,140,0.55)', fontWeight: 300, position: 'relative', zIndex: 1, fontFamily: '"SF Mono", monospace' }}>{node.count}</span>
+                    }
+                  </div>
+                  </motion.div>
+                  {/* Label outside motion.div so it doesn't affect the animation wrapper's size */}
+                  <span style={{ position: 'absolute', ...(node.id === 'scannen' ? { bottom: '100%', marginBottom: '5px' } : { top: '100%', marginTop: '5px' }), left: '50%', transform: 'translateX(-50%)', fontSize: '7px', color: node.isOrigin ? 'rgba(212,168,83,0.45)' : 'rgba(240,237,232,0.22)', letterSpacing: '0.18em', whiteSpace: 'nowrap' }}>
+                    {node.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Info circle 05 removed from here — now inside left column */}
 
         </div>
       </div>

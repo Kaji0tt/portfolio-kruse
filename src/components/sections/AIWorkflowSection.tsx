@@ -188,17 +188,20 @@ export default function AIWorkflowSection() {
                   {workflowSteps.slice(0, -1).map((step, i) => {
                     const next = workflowSteps[i + 1];
                     return (
-                      <motion.line
+                      <motion.g
                         key={i}
-                        x1={step.x} y1={`${parseFloat(step.y) + 3}%`}
-                        x2={next.x}  y2={`${parseFloat(next.y) + 3}%`}
-                        stroke="rgba(240,237,232,0.06)"
-                        strokeWidth="1"
-                        strokeDasharray="4 6"
-                        initial={{ pathLength: 0, opacity: 0 }}
-                        animate={canvasInView ? { pathLength: 1, opacity: 1 } : {}}
+                        initial={{ opacity: 0 }}
+                        animate={canvasInView ? { opacity: 1 } : {}}
                         transition={{ duration: 0.8, delay: i * 0.12 + 0.3 }}
-                      />
+                      >
+                        <line
+                          x1={step.x} y1={step.y}
+                          x2={next.x}  y2={next.y}
+                          stroke="rgba(240,237,232,0.06)"
+                          strokeWidth="1"
+                          strokeDasharray="4 6"
+                        />
+                      </motion.g>
                     );
                   })}
                 </svg>
@@ -209,14 +212,15 @@ export default function AIWorkflowSection() {
                   const isFirst = i === 0;
                   const isLast = i === workflowSteps.length - 1;
                   return (
-                    <motion.div
+                    <div
                       key={step.label}
-                      className="absolute flex flex-col items-center"
-                      style={{ left: step.x, top: step.y, transform: 'translate(-50%, -50%)', zIndex: isActive ? 20 : 10 }}
-                      initial={{ opacity: 0, scale: 0.6 }}
-                      animate={canvasInView ? { opacity: 1, scale: 1 } : {}}
-                      transition={{ duration: 0.6, delay: step.delay + 0.1, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ position: 'absolute', left: step.x, top: step.y, transform: 'translate(-50%, -50%)', zIndex: isActive ? 20 : 10 }}
                     >
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.6 }}
+                        animate={canvasInView ? { opacity: 1, scale: 1 } : {}}
+                        transition={{ duration: 0.6, delay: step.delay + 0.1, ease: [0.16, 1, 0.3, 1] }}
+                      >
                       <motion.div
                         className="relative flex items-center justify-center rounded-full"
                         animate={{
@@ -251,17 +255,18 @@ export default function AIWorkflowSection() {
                           {String(i + 1).padStart(2, '0')}
                         </span>
                       </motion.div>
+                      </motion.div>
 
                       <motion.div
                         animate={{ opacity: isActive ? 1 : 0.35 }}
                         transition={{ duration: 0.4 }}
-                        style={{ marginTop: '10px', textAlign: 'center', maxWidth: '72px' }}
+                        style={{ position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '10px', textAlign: 'center', width: '72px' }}
                       >
                         <p style={{ fontSize: '8px', color: 'rgba(240,237,232,0.6)', letterSpacing: '0.12em', fontWeight: 400, lineHeight: 1.2 }}>
                           {step.label}
                         </p>
                       </motion.div>
-                    </motion.div>
+                    </div>
                   );
                 })}
 
