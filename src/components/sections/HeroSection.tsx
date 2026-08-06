@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { gsap } from 'gsap';
 
@@ -6,6 +6,15 @@ const EASE_OUT: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 export default function HeroSection() {
   const taglineRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1024px)');
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (!taglineRef.current) return;
@@ -156,34 +165,58 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Scroll invitation */}
+      {/* Scroll invitation / Mobile gate */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 3.5, duration: 1.5 }}
         className="absolute bottom-12 left-1/2 flex flex-col items-center gap-3"
-        style={{ transform: 'translateX(-50%)' }}
+        style={{ transform: 'translateX(-50%)', width: 'max-content', maxWidth: '80vw', textAlign: 'center' }}
       >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className="flex flex-col items-center gap-1"
-        >
-          <div
-            className="rounded-full"
-            style={{
-              width: '1px',
-              height: '40px',
-              background: 'linear-gradient(to bottom, transparent, rgba(240,237,232,0.2))',
-            }}
-          />
-          <span
-            className="tracking-widest uppercase"
-            style={{ fontSize: '9px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em' }}
+        {isMobile ? (
+          <div className="flex flex-col items-center gap-4">
+            <div
+              className="mx-auto"
+              style={{ width: '24px', height: '1px', background: 'rgba(240,237,232,0.12)' }}
+            />
+            <p
+              style={{
+                fontSize: '11px',
+                color: 'rgba(240,237,232,0.3)',
+                letterSpacing: '0.08em',
+                lineHeight: 1.7,
+                fontWeight: 300,
+              }}
+            >
+              Thank you for your interest.
+              <br />
+              This experience is crafted for desktop.
+              <br />
+              Please come back on a larger screen.
+            </p>
+          </div>
+        ) : (
+          <motion.div
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            className="flex flex-col items-center gap-1"
           >
-            Scroll
-          </span>
-        </motion.div>
+            <div
+              className="rounded-full"
+              style={{
+                width: '1px',
+                height: '40px',
+                background: 'linear-gradient(to bottom, transparent, rgba(240,237,232,0.2))',
+              }}
+            />
+            <span
+              className="tracking-widest uppercase"
+              style={{ fontSize: '9px', color: 'rgba(240,237,232,0.2)', letterSpacing: '0.3em' }}
+            >
+              Scroll
+            </span>
+          </motion.div>
+        )}
       </motion.div>
     </section>
   );

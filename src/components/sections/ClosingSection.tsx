@@ -132,7 +132,7 @@ export default function ClosingSection() {
               display: 'flex', justifyContent: 'center',
             }}>
               <motion.a
-                href="mailto:hello@jascha-kruse.de"
+                href="mailto:jascha.kruse@web.de"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 style={{

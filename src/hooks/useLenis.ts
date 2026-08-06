@@ -5,34 +5,55 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
 
+const MOBILE_MQ = '(max-width: 1024px)';
+
 export function useLenis() {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
-    const lenis = new Lenis({
-      duration: 1.4,
-      easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: 'vertical',
-      smoothWheel: true,
-    });
+    let tickerCallback: ((time: number) => void) | null = null;
 
-    lenisRef.current = lenis;
-    (window as unknown as Record<string, unknown>).__lenis = lenis;
+    function start() {
+      if (lenisRef.current) return;
 
-    // Connect Lenis to GSAP ScrollTrigger
-    lenis.on('scroll', ScrollTrigger.update);
+      const lenis = new Lenis({
+        duration: 1.4,
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: 'vertical',
+        smoothWheel: true,
+      });
 
-    const tickerCallback = (time: number) => {
-      lenis.raf(time * 1000);
+      lenisRef.current = lenis;
+      (window as unknown as Record<string, unknown>).__lenis = lenis;
+
+      lenis.on('scroll', ScrollTrigger.update);
+
+      tickerCallback = (time: number) => lenis.raf(time * 1000);
+      gsap.ticker.add(tickerCallback);
+      gsap.ticker.lagSmoothing(0);
+    }
+
+    function stop() {
+      if (!lenisRef.current) return;
+      if (tickerCallback) gsap.ticker.remove(tickerCallback);
+      lenisRef.current.destroy();
+      lenisRef.current = null;
+      delete (window as unknown as Record<string, unknown>).__lenis;
+    }
+
+    const mq = window.matchMedia(MOBILE_MQ);
+
+    if (!mq.matches) start();
+
+    const handler = (e: MediaQueryListEvent) => {
+      if (e.matches) stop();
+      else start();
     };
-
-    gsap.ticker.add(tickerCallback);
-    gsap.ticker.lagSmoothing(0);
+    mq.addEventListener('change', handler);
 
     return () => {
-      gsap.ticker.remove(tickerCallback);
-      lenis.destroy();
-      delete (window as unknown as Record<string, unknown>).__lenis;
+      mq.removeEventListener('change', handler);
+      stop();
     };
   }, []);
 
