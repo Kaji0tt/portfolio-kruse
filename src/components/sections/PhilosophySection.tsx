@@ -31,7 +31,7 @@ const pillars = [
   {
     number: '03',
     title: 'TECHNOLOGY',
-    body: 'I understand how digital systems are built — from UI to architecture. That gives me a precise language for working with AI: turning vision and intent into tailored user experiences, without losing anything in translation.',
+    body: 'I understand the tools, systems, and creative workflows behind digital design — from visual exploration and UI to technical architecture. That broader perspective helps me turn intent into tailored user experiences, using AI where it adds value without losing the craft or clarity of the design process.',
     accent: 'rgba(130,160,200,0.1)',
     glow: 'rgba(130,160,200,0.04)',
     activeColor: 'rgba(130,160,200,0.9)',
