@@ -15,7 +15,7 @@ const pillars = [
   {
     number: '01',
     title: 'PSYCHOLOGY',
-    body: 'My background in psychology gives me a framework for understanding why people make the decisions they do — and how to design interactions that work with those patterns, not against them.',
+    body: 'My background in teaching led me to a framework for understanding how information is being processed by people — and how to design information that works with those patterns, not against them.',
     accent: 'rgba(200,184,154,0.15)',
     glow: 'rgba(200,184,154,0.06)',
     activeColor: 'rgba(240,237,232,0.92)',
@@ -23,7 +23,7 @@ const pillars = [
   {
     number: '02',
     title: 'ART',
-    body: 'Working in art before design taught me that structure isn\'t the opposite of expression — it\'s what makes expression land. I bring that eye for visual tension and balance to every project.',
+    body: 'My art studies taught me how creativity works in practice and in theory. My background in business also helped me bring structure to the creative process through design, while also understanding how creative ideas can be shaped, communicated, and brought to market.',
     accent: 'rgba(212,168,83,0.12)',
     glow: 'rgba(212,168,83,0.05)',
     activeColor: 'rgba(200,184,154,0.85)',
