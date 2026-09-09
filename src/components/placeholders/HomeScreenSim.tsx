@@ -1,0 +1,107 @@
+import { useState } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+
+const BORDERS = ['border_default', 'border_hacked', 'border_orbit', 'border_triad'];
+const FACES = ['face_default', 'face_smile', 'face_mask', 'face_bug'];
+// Plant-Layer ist bewusst nicht wählbar - immer der Legacy-Stand.
+const PLANT_IMAGE = '/logo/plant_legacy.png';
+
+// Statischer Nachbau des Home-Screens: individualisierbares Logo (Plant/Border/Face-Layer) vor dem
+// Guestfunnel-Ebenensystem (bg/mg/fg) aus dem echten Projekt, das beim Seiten-Scroll leicht parallaxt.
+export default function HomeScreenSim() {
+  const [variantIndex, setVariantIndex] = useState(0);
+  const total = Math.max(BORDERS.length, FACES.length);
+  const randomizeVariant = () => {
+    setVariantIndex((prev) => {
+      if (total <= 1) return prev;
+      let next = prev;
+      while (next === prev) {
+        next = Math.floor(Math.random() * total);
+      }
+      return next;
+    });
+  };
+  const borderImage = `/logo/${BORDERS[variantIndex % BORDERS.length]}.png`;
+  const faceImage = `/logo/${FACES[variantIndex % FACES.length]}.png`;
+
+  const { scrollYProgress } = useScroll();
+  const mgY = useTransform(scrollYProgress, [0, 1], [0, -70]);
+  const fgY = useTransform(scrollYProgress, [0, 1], [0, -160]);
+
+  return (
+    <div style={{ width: '100%', height: '100%', borderRadius: '32px', overflow: 'hidden', position: 'relative', background: '#0c0f0a' }}>
+      {/* Guestfunnel-Layersystem: bg fix, mg/fg scrollen stark mit fürs Tiefengefühl des Originals */}
+      <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/guestfunnel/bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      <motion.div style={{ position: 'absolute', inset: '-18%', y: mgY, backgroundImage: 'url(/guestfunnel/mg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(4,10,6,0.5)' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(5,15,8,0.88) 0%, rgba(5,15,8,0.5) 45%, transparent 80%)' }} />
+
+      <div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '52px 20px 20px' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '32px', gap: '14px', width: '100%' }}>
+        <span
+          style={{
+            fontSize: '13px',
+            fontWeight: 500,
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            textAlign: 'center',
+            color: 'rgba(240,237,232,0.95)',
+            background: 'rgba(4,10,6,0.55)',
+            backdropFilter: 'blur(6px)',
+            WebkitBackdropFilter: 'blur(6px)',
+            border: '1px solid rgba(240,237,232,0.15)',
+            borderRadius: '999px',
+            padding: '8px 18px',
+          }}
+        >
+          Willkommen bei Floralog!
+        </span>
+
+        {/* Custom Logo — Plant/Border/Face-Layer wie in CustomLogoAvatar gestapelt, Border/Face per Pfeil zufällig neu gewählt */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            onClick={randomizeVariant}
+            aria-label="Zufälliges Artwork"
+            style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.2)', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            <ChevronLeft size={14} color="rgba(240,237,232,0.6)" strokeWidth={1.5} />
+          </button>
+
+          <div
+            style={{
+              position: 'relative',
+              width: '128px',
+              height: '128px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle, rgba(212,168,83,0.14) 0%, transparent 70%)',
+            }}
+          >
+            <img src={PLANT_IMAGE} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img key={borderImage} src={borderImage} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+            <img key={faceImage} src={faceImage} alt="Custom Logo" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+          </div>
+
+          <button
+            type="button"
+            onClick={randomizeVariant}
+            aria-label="Zufälliges Artwork"
+            style={{ width: '26px', height: '26px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.2)', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            <ChevronRight size={14} color="rgba(240,237,232,0.6)" strokeWidth={1.5} />
+          </button>
+        </div>
+
+        <p style={{ fontSize: '13px', fontWeight: 300, color: 'rgba(240,237,232,0.9)', textAlign: 'center', textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}>
+          Erstelle deinen Florabot Naturbegleiter!
+        </p>
+        </div>
+      </div>
+
+      <motion.div
+        style={{ position: 'absolute', inset: '-18%', y: fgY, backgroundImage: 'url(/guestfunnel/fg.png)', backgroundSize: 'cover', backgroundPosition: 'center', pointerEvents: 'none', zIndex: 5 }}
+      />
+    </div>
+  );
+}

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
 
 interface Screen {
@@ -5,6 +6,8 @@ interface Screen {
   hasTopBar?: boolean;
   hasBottomBar?: boolean;
   image?: string;
+  // Live-Inhalt statt eines statischen Screenshots (z.B. eine scroll-getriebene Simulation).
+  content?: ReactNode;
 }
 
 const defaultScreens: Screen[] = [
@@ -71,34 +74,38 @@ export default function DeviceMockup({
           <div
             className="absolute inset-0"
             style={{
-              background: screen.image
+              background: (screen.image || screen.content)
                 ? '#000'
                 : 'linear-gradient(160deg, #0f1410 0%, #0a0d0f 50%, #0d0a0f 100%)',
             }}
           >
-            {screens.some(s => s.image) ? (
-              /* All images rendered at once so browser preloads them — only active is visible */
+            {screens.some(s => s.image || s.content) ? (
+              /* All images/live screens rendered at once so browser preloads them — only active is visible */
               <>
-                {screens.map((s, i) => s.image && (
+                {screens.map((s, i) => (s.image || s.content) && (
                   <motion.div
-                    key={s.image}
+                    key={i}
                     className="absolute inset-0"
-                    style={{ padding: '10px' }}
+                    style={{ padding: '10px', pointerEvents: i === activeScreen ? 'auto' : 'none' }}
                     animate={{ opacity: i === activeScreen ? 1 : 0 }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <img
-                      src={s.image}
-                      alt={s.label}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        objectPosition: 'center top',
-                        borderRadius: '32px',
-                        display: 'block',
-                      }}
-                    />
+                    {s.image ? (
+                      <img
+                        src={s.image}
+                        alt={s.label}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: 'center top',
+                          borderRadius: '32px',
+                          display: 'block',
+                        }}
+                      />
+                    ) : (
+                      s.content
+                    )}
                   </motion.div>
                 ))}
               </>

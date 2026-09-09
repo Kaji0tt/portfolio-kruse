@@ -2,13 +2,16 @@ import { useRef, useState, useEffect } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { Compass, TrendingUp } from 'lucide-react';
 import DeviceMockup from '../placeholders/DeviceMockup';
+import CollectionScreenSim from '../placeholders/CollectionScreenSim';
+import HomeScreenSim from '../placeholders/HomeScreenSim';
+import MapScreenSim from '../placeholders/MapScreenSim';
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const designDecisions = [
   {
-    title: 'PLAYFUL EXPLORATION',
-    body: 'Reducing barriers for beginners. Entry points that invite curiosity without demanding expertise.',
+    title: 'GAMIFIED PROGRESS',
+    body: 'Zone bonuses, daily challenges and finds plotted on a map turn routine walks into visible, rewarding progress.',
     icon: '◎',
   },
   {
@@ -57,7 +60,6 @@ const screens = [
     body: 'Botany contains enormous complexity: thousands of species, scientific relationships and vast amounts of information. The UX challenge was to make knowledge become exploration — to make information create curiosity.',
     hasTopBar: false,
     hasBottomBar: false,
-    image: '/Screen1.png',
   },
   {
     label: 'Explore',
@@ -66,16 +68,14 @@ const screens = [
     body: 'At the heart of the experience is a digital companion. A mascot that builds personality, forms attachment, and shares the player\'s curiosity. It doesn\'t instruct. It discovers alongside you. \n But curiosity is not just designed for — it is measured. Where users choose to navigate next becomes signal, and that signal feeds directly into product decisions and every iteration of the design process.',
     hasTopBar: false,
     hasBottomBar: false,
-    image: '/Screen2.png',
   },
   {
-    label: 'Plant Detail',
-    eyebrow: 'DEPTH ON DEMAND',
-    headline: 'From first glance\nto deep\nknowledge.',
-    body: 'Knowledge doesn\'t arrive all at once — it unfolds through play. The more you interact, the more the plant reveals. Depth is a reward, not a prerequisite.',
+    label: 'Zones',
+    eyebrow: 'GAMIFICATION',
+    headline: 'Every walk\nbecomes\na quest.',
+    body: 'The real world is the game board. Zones carry reward multipliers, daily challenges turn a normal walk into a small quest, and every find is plotted on the map — progress you can see, not just numbers you have to imagine.',
     hasTopBar: false,
     hasBottomBar: false,
-    image: '/Screen3.png',
   },
 ];
 
@@ -147,6 +147,14 @@ export default function FloralogSection() {
 
   const phoneY = useTransform(stickyProgress, [0, 1], [60, -10]);
   const phoneRotate = useTransform(stickyProgress, [0, 0.5, 1], [-2, 0, 2]);
+  // Fortschritt innerhalb des Explore-Screens (mittleres Drittel) fürs simulierte Sammlung-Scrollen.
+  const collectionScrollProgress = useTransform(stickyProgress, [1 / screens.length, 2 / screens.length], [0, 1]);
+  const phoneScreens = screens.map((screen, i) => {
+    if (i === 0) return { ...screen, content: <HomeScreenSim /> };
+    if (i === 1) return { ...screen, content: <CollectionScreenSim progress={collectionScrollProgress} /> };
+    if (i === 2) return { ...screen, content: <MapScreenSim /> };
+    return screen;
+  });
   // Title starts above phone, moves further up as phone rises over it
   const titleY = useTransform(stickyProgress, [0, 1], [-20, -70]);
   const titleOpacity = useTransform(stickyProgress, [0, 0.4, 1], [1, 0.65, 0.2]);
@@ -157,21 +165,18 @@ export default function FloralogSection() {
       prevActiveScreen.current = index;
       if (index === 0) {
         setPingTriggers(t => { const n = [...t]; n[0]++; return n; });
-        setTimeout(() => setPingTriggers(t => { const n = [...t]; n[1]++; return n; }), 320);
       } else if (index === 1) {
         setPingTriggers(t => { const n = [...t]; n[2]++; return n; });
+        setTimeout(() => setPingTriggers(t => { const n = [...t]; n[1]++; return n; }), 320);
       } else if (index === 2) {
         setPingTriggers(t => { const n = [...t]; n[3]++; return n; });
       }
     }
-    // Flow dots appear halfway between Explore (1/3) and Plant Detail (2/3) at progress 0.5
-    if (latest >= 0.5 && !prevFlowVisible.current) {
+    // Flow-Diagramm lebt jetzt in Screen 0 (Home) - Ping kurz nach Betreten des ersten Drittels statt bei 0.5.
+    if (latest >= 1 / (2 * screens.length) && !prevFlowVisible.current) {
       setPingTriggers(t => { const n = [...t]; n[4]++; return n; });
       setFlowVisible(true);
       prevFlowVisible.current = true;
-    } else if (latest < 1 / 3 && prevFlowVisible.current) {
-      setFlowVisible(false);
-      prevFlowVisible.current = false;
     }
     setActiveScreen(index);
   });
@@ -247,40 +252,40 @@ export default function FloralogSection() {
               {/* Phone — absolute, centered horizontally, overlaps title from below */}
               <div style={{ position: 'absolute', top: 'calc(30px + 8vh)', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2 }}>
                 <motion.div style={{ y: phoneY, rotate: phoneRotate, scale: phoneScale }}>
-                  <DeviceMockup screens={screens} activeScreen={activeScreen} />
+                  <DeviceMockup screens={phoneScreens} activeScreen={activeScreen} />
                 </motion.div>
               </div>
 
-              {/* IA Step 1 — Home, bottom-right | Tooltip: above, left-aligned to right edge */}
-              <div style={{ position: 'absolute', bottom: '110px', right: 0, zIndex: 4, pointerEvents: activeScreen === 0 ? 'auto' : 'none' }}>
+              {/* IA Step — Explore (screen 1), bottom-right | Tooltip: above, left-aligned to right edge */}
+              <div style={{ position: 'absolute', bottom: '110px', right: 0, zIndex: 4, pointerEvents: activeScreen === 1 ? 'auto' : 'none' }}>
                 <motion.div
-                  animate={{ opacity: activeScreen === 0 ? 1 : 0, y: activeScreen === 0 ? 0 : 8 }}
+                  animate={{ opacity: activeScreen === 1 ? 1 : 0, y: activeScreen === 1 ? 0 : 8 }}
                   transition={{ duration: 0.5, ease: EASE }}
                   style={{ position: 'relative' }}
                   onMouseEnter={() => setHoveredStep(0)}
                   onMouseLeave={() => setHoveredStep(null)}
                 >
                   <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.28)', background: 'rgba(12,12,12,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', position: 'relative' }}>
-                    <PingRing trigger={pingTriggers[0]} />
-                    <motion.span animate={{ opacity: hoveredStep === 0 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>01</motion.span>
+                    <PingRing trigger={pingTriggers[2]} />
+                    <motion.span animate={{ opacity: hoveredStep === 0 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>03</motion.span>
                     <motion.span animate={{ opacity: hoveredStep === 0 ? 1 : 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', fontSize: '20px', color: 'rgba(240,237,232,0.6)', zIndex: 1 }}>◫</motion.span>
                     <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 70%)' }} />
                   </div>
                   <motion.div
                     animate={{ opacity: hoveredStep === 0 ? 1 : 0, y: hoveredStep === 0 ? 0 : 4 }}
                     transition={{ duration: 0.2 }}
-                    style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '12px 16px', width: '190px', pointerEvents: 'none' }}
+                    style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '14px 18px', width: '220px', pointerEvents: 'none' }}
                   >
-                    <p style={{ fontSize: '12px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '3px' }}>{designDecisions[1].title}</p>
-                    <p style={{ fontSize: '11px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.5 }}>{designDecisions[1].body}</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '4px' }}>{designDecisions[1].title}</p>
+                    <p style={{ fontSize: '13px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.6 }}>{designDecisions[1].body}</p>
                   </motion.div>
                 </motion.div>
               </div>
 
-              {/* Info circle 05 — Explore, same position as 01, appears with flowVisible */}
-              <div style={{ position: 'absolute', bottom: '110px', right: 0, zIndex: 4, pointerEvents: (flowVisible && activeScreen === 1) ? 'auto' : 'none' }}>
+              {/* Info circle — Home (screen 0), same position as the Explore circle, appears with flowVisible */}
+              <div style={{ position: 'absolute', bottom: '110px', right: 0, zIndex: 4, pointerEvents: (flowVisible && activeScreen === 0) ? 'auto' : 'none' }}>
                 <motion.div
-                  animate={{ opacity: (flowVisible && activeScreen === 1) ? 1 : 0, y: (flowVisible && activeScreen === 1) ? 0 : 8 }}
+                  animate={{ opacity: (flowVisible && activeScreen === 0) ? 1 : 0, y: (flowVisible && activeScreen === 0) ? 0 : 8 }}
                   transition={{ duration: 0.5, ease: EASE }}
                   style={{ position: 'relative' }}
                   onMouseEnter={() => setHoveredStep(4)}
@@ -288,25 +293,25 @@ export default function FloralogSection() {
                 >
                   <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.28)', background: 'rgba(12,12,12,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', position: 'relative' }}>
                     <PingRing trigger={pingTriggers[4]} />
-                    <motion.span animate={{ opacity: hoveredStep === 4 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>04</motion.span>
+                    <motion.span animate={{ opacity: hoveredStep === 4 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>02</motion.span>
                     <motion.span animate={{ opacity: hoveredStep === 4 ? 1 : 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}><TrendingUp size={20} color="rgba(240,237,232,0.6)" strokeWidth={1.5} /></motion.span>
                     <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 70%)' }} />
                   </div>
                   <motion.div
                     animate={{ opacity: hoveredStep === 4 ? 1 : 0, y: hoveredStep === 4 ? 0 : 4 }}
                     transition={{ duration: 0.2 }}
-                    style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '12px 16px', width: '210px', pointerEvents: 'none' }}
+                    style={{ position: 'absolute', bottom: 'calc(100% + 8px)', right: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '14px 18px', width: '240px', pointerEvents: 'none' }}
                   >
-                    <p style={{ fontSize: '12px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '3px' }}>USER FLOW INSIGHTS</p>
-                    <p style={{ fontSize: '11px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.5 }}>Navigation patterns made measurable, feeding directly into the iterative design process.</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '4px' }}>USER FLOW INSIGHTS</p>
+                    <p style={{ fontSize: '13px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.6 }}>Navigation patterns made measurable, feeding directly into the iterative design process.</p>
                   </motion.div>
                 </motion.div>
               </div>
 
-              {/* IA Step 2 — Home, just left of phone | Tooltip: below, extends right */}
-              <div style={{ position: 'absolute', top: '42%', left: 'calc(50% - 185px)', transform: 'translateY(-50%)', zIndex: 4, pointerEvents: activeScreen === 0 ? 'auto' : 'none' }}>
+              {/* IA Step — Explore (screen 1), just left of phone | Tooltip: below, extends right */}
+              <div style={{ position: 'absolute', top: '42%', left: 'calc(50% - 185px)', transform: 'translateY(-50%)', zIndex: 4, pointerEvents: activeScreen === 1 ? 'auto' : 'none' }}>
                 <motion.div
-                  animate={{ opacity: activeScreen === 0 ? 1 : 0, x: activeScreen === 0 ? 0 : -8 }}
+                  animate={{ opacity: activeScreen === 1 ? 1 : 0, x: activeScreen === 1 ? 0 : -8 }}
                   transition={{ duration: 0.5, ease: EASE }}
                   style={{ position: 'relative' }}
                   onMouseEnter={() => setHoveredStep(1)}
@@ -314,43 +319,43 @@ export default function FloralogSection() {
                 >
                   <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.28)', background: 'rgba(12,12,12,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', position: 'relative' }}>
                     <PingRing trigger={pingTriggers[1]} />
-                    <motion.span animate={{ opacity: hoveredStep === 1 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>02</motion.span>
+                    <motion.span animate={{ opacity: hoveredStep === 1 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>04</motion.span>
                     <motion.span animate={{ opacity: hoveredStep === 1 ? 1 : 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}><Compass size={20} color="rgba(240,237,232,0.6)" strokeWidth={1.5} /></motion.span>
                     <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 70%)' }} />
                   </div>
                   <motion.div
                     animate={{ opacity: hoveredStep === 1 ? 1 : 0, y: hoveredStep === 1 ? 0 : 4 }}
                     transition={{ duration: 0.2 }}
-                    style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '12px 16px', width: '190px', pointerEvents: 'none' }}
+                    style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '14px 18px', width: '220px', pointerEvents: 'none' }}
                   >
-                    <p style={{ fontSize: '12px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '3px' }}>{iaSteps[1].label}</p>
-                    <p style={{ fontSize: '11px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.5 }}>{iaSteps[1].description}</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '4px' }}>{iaSteps[1].label}</p>
+                    <p style={{ fontSize: '13px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.6 }}>{iaSteps[1].description}</p>
                   </motion.div>
                 </motion.div>
               </div>
 
-              {/* IA Step 3 — Explore, just right of phone | Tooltip: below, right-aligned */}
-              <div style={{ position: 'absolute', top: '55%', left: 'calc(50% + 110px)', transform: 'translateY(-50%)', zIndex: 4, pointerEvents: activeScreen === 1 ? 'auto' : 'none' }}>
+              {/* IA Step — Home (screen 0), just right of phone | Tooltip: below, right-aligned */}
+              <div style={{ position: 'absolute', top: '55%', left: 'calc(50% + 110px)', transform: 'translateY(-50%)', zIndex: 4, pointerEvents: activeScreen === 0 ? 'auto' : 'none' }}>
                 <motion.div
-                  animate={{ opacity: activeScreen === 1 ? 1 : 0, x: activeScreen === 1 ? 0 : 8 }}
+                  animate={{ opacity: activeScreen === 0 ? 1 : 0, x: activeScreen === 0 ? 0 : 8 }}
                   transition={{ duration: 0.5, ease: EASE }}
                   style={{ position: 'relative' }}
                   onMouseEnter={() => setHoveredStep(2)}
                   onMouseLeave={() => setHoveredStep(null)}
                 >
                   <div style={{ width: '52px', height: '52px', borderRadius: '50%', border: '1px solid rgba(240,237,232,0.28)', background: 'rgba(12,12,12,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'default', position: 'relative' }}>
-                    <PingRing trigger={pingTriggers[2]} />
-                    <motion.span animate={{ opacity: hoveredStep === 2 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>03</motion.span>
+                    <PingRing trigger={pingTriggers[0]} />
+                    <motion.span animate={{ opacity: hoveredStep === 2 ? 0 : 1 }} transition={{ duration: 0.2 }} style={{ fontSize: '12px', color: 'rgba(240,237,232,0.5)', fontWeight: 300, letterSpacing: '0.05em', position: 'relative', zIndex: 1 }}>01</motion.span>
                     <motion.span animate={{ opacity: hoveredStep === 2 ? 1 : 0 }} transition={{ duration: 0.2 }} style={{ position: 'absolute', fontSize: '20px', color: 'rgba(240,237,232,0.6)', zIndex: 1 }}>◈</motion.span>
                     <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 70%)' }} />
                   </div>
                   <motion.div
                     animate={{ opacity: hoveredStep === 2 ? 1 : 0, y: hoveredStep === 2 ? 0 : 4 }}
                     transition={{ duration: 0.2 }}
-                    style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '12px 16px', width: '190px', pointerEvents: 'none' }}
+                    style={{ position: 'absolute', top: 'calc(100% + 8px)', right: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '14px 18px', width: '220px', pointerEvents: 'none' }}
                   >
-                    <p style={{ fontSize: '12px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '3px' }}>{designDecisions[2].title}</p>
-                    <p style={{ fontSize: '11px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.5 }}>{designDecisions[2].body}</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '4px' }}>{designDecisions[2].title}</p>
+                    <p style={{ fontSize: '13px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.6 }}>{designDecisions[2].body}</p>
                   </motion.div>
                 </motion.div>
               </div>
@@ -373,10 +378,10 @@ export default function FloralogSection() {
                   <motion.div
                     animate={{ opacity: hoveredStep === 3 ? 1 : 0, y: hoveredStep === 3 ? 0 : 4 }}
                     transition={{ duration: 0.2 }}
-                    style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '12px 16px', width: '190px', pointerEvents: 'none' }}
+                    style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, background: 'rgba(15,15,15,1)', border: '1px solid rgba(240,237,232,0.18)', borderRadius: '10px', padding: '14px 18px', width: '220px', pointerEvents: 'none' }}
                   >
-                    <p style={{ fontSize: '12px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '3px' }}>{designDecisions[0].title}</p>
-                    <p style={{ fontSize: '11px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.5 }}>{designDecisions[0].body}</p>
+                    <p style={{ fontSize: '14px', color: 'rgba(240,237,232,0.55)', fontWeight: 300, marginBottom: '4px' }}>{designDecisions[0].title}</p>
+                    <p style={{ fontSize: '13px', color: 'rgba(240,237,232,0.25)', fontWeight: 300, lineHeight: 1.6 }}>{designDecisions[0].body}</p>
                   </motion.div>
                 </motion.div>
               </div>
@@ -498,9 +503,9 @@ export default function FloralogSection() {
 
           </div>
 
-          {/* CSV Data panel — Screen 0 (Home): taxonomy data */}
+          {/* CSV Data panel — Screen 1 (Explore): taxonomy data, alongside the collection simulation */}
           <motion.div
-            animate={{ opacity: activeScreen === 0 ? 1 : 0, y: activeScreen === 0 ? 0 : 10 }}
+            animate={{ opacity: activeScreen === 1 ? 1 : 0, y: activeScreen === 1 ? 0 : 10 }}
             transition={{ duration: 0.6, ease: EASE }}
             style={{
               position: 'absolute',
@@ -556,9 +561,9 @@ export default function FloralogSection() {
             </div>
           </motion.div>
 
-          {/* KPI image panel — Screen 1 (Explore): user flow data */}
+          {/* KPI image panel — Screen 0 (Home): user flow data, origin node matches the Home label */}
           <motion.div
-            animate={{ opacity: activeScreen === 1 ? 1 : 0, y: activeScreen === 1 ? 0 : 10 }}
+            animate={{ opacity: activeScreen === 0 ? 1 : 0, y: activeScreen === 0 ? 0 : 10 }}
             transition={{ duration: 0.6, ease: EASE }}
             style={{
               position: 'absolute',

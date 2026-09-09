@@ -4,10 +4,8 @@ import { motion, useScroll, useMotionValueEvent, useTransform } from 'framer-mot
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 // Gap (px) between stacked cards
 const CARD_GAP = 4;
-// Fixed height (px) for collapsed past cards — enough to show number + title start
+// Fixed height (px) for collapsed past cards — only the counter remains visible
 const PAST_HEIGHT = 88;
-// Minimum height per card to display full content; below this threshold compact mode activates
-const CARD_MIN_FULL_HEIGHT = 220;
 // Scroll fraction before highlights/cards begin
 const SCROLL_DELAY = 0.12;
 
@@ -23,7 +21,7 @@ const pillars = [
   {
     number: '02',
     title: 'ART',
-    body: 'My art studies taught me how creativity works in practice and in theory. My background in business also helped me bring structure to the creative process through design, while also understanding how creative ideas can be shaped, communicated, and brought to market.',
+    body: 'My art studies taught me how creativity works in practice and in theory. By approaching creativity as a structured process — from ideation to design and communication — I can develop tailored solutions for specific use cases.',
     accent: 'rgba(212,168,83,0.12)',
     glow: 'rgba(212,168,83,0.05)',
     activeColor: 'rgba(200,184,154,0.85)',
@@ -38,7 +36,7 @@ const pillars = [
   },
 ];
 
-function PillarCard({ pillar }: { pillar: (typeof pillars)[0] }) {
+function PillarCard({ pillar, collapsed = false }: { pillar: (typeof pillars)[0]; collapsed?: boolean }) {
   return (
     <div
       className="relative flex flex-col"
@@ -76,45 +74,53 @@ function PillarCard({ pillar }: { pillar: (typeof pillars)[0] }) {
               fontSize: 'clamp(10px, 1vw, 14px)',
               color: 'rgba(240,237,232,0.2)',
               letterSpacing: '0.2em',
-              marginBottom: 'clamp(16px, 2.5vh, 32px)',
+              marginBottom: collapsed ? 0 : 'clamp(16px, 2.5vh, 32px)',
             }}
           >
             {pillar.number}
           </span>
 
-          <h3
-            style={{
-              fontSize: 'clamp(28px, 4vw, 56px)',
-              fontWeight: 200,
-              letterSpacing: '-0.01em',
-              color: 'rgba(240,237,232,0.9)',
-              lineHeight: 1.0,
-              marginBottom: 'clamp(16px, 2.5vh, 32px)',
-            }}
-          >
-            {pillar.title}
-          </h3>
+          {!collapsed && (
+            <>
+              <h3
+                style={{
+                  fontSize: 'clamp(28px, 4vw, 56px)',
+                  fontWeight: 200,
+                  letterSpacing: '-0.01em',
+                  color: 'rgba(240,237,232,0.9)',
+                  lineHeight: 1.0,
+                  marginBottom: 'clamp(16px, 2.5vh, 32px)',
+                }}
+              >
+                {pillar.title}
+              </h3>
 
-          <div
-            style={{
-              width: 'clamp(24px, 2vw, 40px)',
-              height: '1px',
-              background: 'rgba(240,237,232,0.12)',
-              marginBottom: 'clamp(16px, 2.5vh, 32px)',
-            }}
-          />
+              <div
+                style={{
+                  width: 'clamp(24px, 2vw, 40px)',
+                  minWidth: '24px',
+                  height: 'clamp(16px, 2.5vh, 32px)',
+                  display: 'block',
+                  flexShrink: 0,
+                  borderTop: '1px solid rgba(240,237,232,0.12)',
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              />
 
-          <p
-            style={{
-              fontSize: 'clamp(14px, 1.2vw, 20px)',
-              color: 'rgba(240,237,232,0.4)',
-              lineHeight: 1.75,
-              fontWeight: 300,
-              flex: 1,
-            }}
-          >
-            {pillar.body}
-          </p>
+              <p
+                style={{
+                  fontSize: 'clamp(14px, 1.2vw, 20px)',
+                  color: 'rgba(240,237,232,0.4)',
+                  lineHeight: 1.75,
+                  fontWeight: 300,
+                  flex: 1,
+                }}
+              >
+                {pillar.body}
+              </p>
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -168,31 +174,17 @@ export default function PhilosophySection() {
    */
   const getCardAnim = (i: number) => {
     const h = containerHeight;
-    // Use equal-slot layout only when the container is tall enough to show all cards fully
-    const fullHeightNeeded = pillars.length * CARD_MIN_FULL_HEIGHT + (pillars.length - 1) * CARD_GAP;
-    const useEqualSlots = h >= fullHeightNeeded;
 
     if (activeIndex === -1 || i > activeIndex) {
-      const slotH = useEqualSlots ? h / Math.max(activeIndex + 1, 1) : PAST_HEIGHT;
-      return { top: h + 20, height: slotH, opacity: 0, zIndex: 0 };
+      return { top: h + 20, height: PAST_HEIGHT, opacity: 0, zIndex: 0 };
     }
 
-    if (useEqualSlots) {
-      // Original design: equal vertical slices
-      const n = Math.max(activeIndex + 1, 1);
-      const slotH = h / n;
-      if (i < activeIndex) {
-        return { top: i * slotH, height: slotH - CARD_GAP, opacity: 0.6, zIndex: i + 1 };
-      }
-      return { top: activeIndex * slotH, height: h - activeIndex * slotH, opacity: 1, zIndex: 10 };
-    } else {
-      // Compact mode: past cards are fixed-height strips, active card fills remaining space
-      if (i < activeIndex) {
-        return { top: i * (PAST_HEIGHT + CARD_GAP), height: PAST_HEIGHT, opacity: 0.6, zIndex: i + 1 };
-      }
-      const pastOffset = activeIndex * (PAST_HEIGHT + CARD_GAP);
-      return { top: pastOffset, height: Math.max(h - pastOffset, PAST_HEIGHT * 2), opacity: 1, zIndex: 10 };
+    if (i < activeIndex) {
+      return { top: i * (PAST_HEIGHT + CARD_GAP), height: PAST_HEIGHT, opacity: 0.6, zIndex: i + 1 };
     }
+
+    const pastOffset = activeIndex * (PAST_HEIGHT + CARD_GAP);
+    return { top: pastOffset, height: Math.max(h - pastOffset, PAST_HEIGHT * 2), opacity: 1, zIndex: 10 };
   };
 
   return (
@@ -300,7 +292,7 @@ export default function PhilosophySection() {
                 transition={{ duration: 0.8, ease: EASE }}
                 onClick={() => { if (i < activeIndex) setActiveIndex(i); }}
               >
-                <PillarCard pillar={pillar} />
+                <PillarCard pillar={pillar} collapsed={i < activeIndex} />
               </motion.div>
             ))}
           </div>
