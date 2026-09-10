@@ -98,9 +98,9 @@ export default function ClosingSection() {
                 lineHeight: 1.25,
                 color: 'rgba(240,237,232,0.85)',
               }}>
-                In a world of instant answers, <span style={{ color: 'rgba(212,168,83,0.9)' }}>the rarest skill</span>
+                In a world of instant answers, <span style={{ color: 'rgba(212,168,83,0.9)' }}>the most valuable skill</span>
                 <br />
-                is knowing which question to ask.
+                is to ask the right question.
               </p>
               <p style={{
                 marginTop: '24px',
@@ -110,8 +110,7 @@ export default function ClosingSection() {
                 lineHeight: 1.7,
                 letterSpacing: '0.02em',
               }}>
-                Digitalisation — amplified exponentially by AI — has made problem solving faster than ever.<br />
-                What remains irreplaceable is the human capacity for <em>problem-finding</em>.
+                When imagination can become technology almost instantly, the important question is no longer what we can build — but <em>why</em>, and for <em>whom</em>.
               </p>
               <p style={{
                 marginTop: '16px',
@@ -157,7 +156,7 @@ export default function ClosingSection() {
                   el.style.color = 'rgba(240,237,232,0.45)';
                 }}
               >
-                GET IN TOUCH <span style={{ opacity: 0.4 }}>→</span>
+                READY FOR CONTACT? 
               </motion.a>
             </motion.div>
 

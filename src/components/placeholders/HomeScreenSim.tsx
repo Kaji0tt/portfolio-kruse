@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import GoldGradientFrame from './GoldGradientFrame';
 
 const BORDERS = ['border_default', 'border_hacked', 'border_orbit', 'border_triad'];
 const FACES = ['face_default', 'face_smile', 'face_mask', 'face_bug'];
@@ -39,24 +40,22 @@ export default function HomeScreenSim() {
 
       <div style={{ position: 'relative', zIndex: 2, height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '52px 20px 20px' }}>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', paddingTop: '32px', gap: '14px', width: '100%' }}>
-        <span
-          style={{
-            fontSize: '13px',
-            fontWeight: 500,
-            letterSpacing: '0.15em',
-            textTransform: 'uppercase',
-            textAlign: 'center',
-            color: 'rgba(240,237,232,0.95)',
-            background: 'rgba(4,10,6,0.55)',
-            backdropFilter: 'blur(6px)',
-            WebkitBackdropFilter: 'blur(6px)',
-            border: '1px solid rgba(240,237,232,0.15)',
-            borderRadius: '999px',
-            padding: '8px 18px',
-          }}
-        >
-          Willkommen bei Floralog!
-        </span>
+        <GoldGradientFrame blur rounded="999px">
+          <span
+            style={{
+              display: 'block',
+              fontSize: '17px',
+              fontWeight: 500,
+              letterSpacing: '0.18em',
+              textTransform: 'uppercase',
+              textAlign: 'center',
+              color: 'rgba(240,237,232,0.95)',
+              padding: '12px 30px',
+            }}
+          >
+            Floralog
+          </span>
+        </GoldGradientFrame>
 
         {/* Custom Logo — Plant/Border/Face-Layer wie in CustomLogoAvatar gestapelt, Border/Face per Pfeil zufällig neu gewählt */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
