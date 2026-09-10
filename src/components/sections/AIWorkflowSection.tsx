@@ -5,7 +5,7 @@ const workflowSteps = [
   {
     label: 'IDEA',
     tooltipTitle: 'PROBLEM SENSITIVITY',
-    description: 'Perceiving what is missing or suboptimal before it becomes a brief — this is the entry point of every meaningful creative act. In an era where answers arrive instantly, the capacity to ask the right question first is the rarest and most valuable skill.',
+    description: 'Noticing where something is missing, unclear, or could work better — often before it becomes a formal brief. This sensitivity to problems and opportunities for improvement is where meaningful creative work begins.',
     x: '8%', y: '-5%', delay: 0,
   },
   {
@@ -17,13 +17,13 @@ const workflowSteps = [
   {
     label: 'PROTOTYPE',
     tooltipTitle: 'COGNITIVE FLEXIBILITY',
-    description: 'Breaking familiar patterns to reach unconventional solutions. Leaving established structure behind requires the kind of flexible thinking no prompt can instruct — it is the designer\'s most distinctly human contribution to the process.',
+    description: 'AI makes it possible to develop and test prototypes faster than ever. This creates room to leave familiar patterns behind, shift perspective, and explore unconventional approaches with less cost and friction. Cognitive flexibility turns that exploration into novel solutions, especially in limited, unusual, or challenging conditions.',
     x: '46%', y: '18%', delay: 0.2,
   },
   {
     label: 'ITERATION',
     tooltipTitle: 'ELABORATION & REDEFINITION',
-    description: 'Restructuring what is known into something new. Guiding interdisciplinary transfer through qualitative judgment and precision prompting — refining outputs until they reflect genuine insight rather than plausible generation.',
+    description: 'Iteration is where early prototypes are tested, refined, and developed further. Each round adds detail, responds to what has been learned, and can redefine the problem or direction when needed. AI accelerates this cycle, while human judgment keeps direction. Precise Prompting ensures effective collaboration between human and AI.',
     x: '66%', y: '60%', delay: 0.3,
   },
   {

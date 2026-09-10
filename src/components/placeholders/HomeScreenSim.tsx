@@ -8,23 +8,26 @@ const FACES = ['face_default', 'face_smile', 'face_mask', 'face_bug'];
 // Plant-Layer ist bewusst nicht wählbar - immer der Legacy-Stand.
 const PLANT_IMAGE = '/logo/plant_legacy.png';
 
+function randomNextIndex(currentIndex: number, total: number) {
+  if (total <= 1) return currentIndex;
+  let nextIndex = currentIndex;
+  while (nextIndex === currentIndex) {
+    nextIndex = Math.floor(Math.random() * total);
+  }
+  return nextIndex;
+}
+
 // Statischer Nachbau des Home-Screens: individualisierbares Logo (Plant/Border/Face-Layer) vor dem
 // Guestfunnel-Ebenensystem (bg/mg/fg) aus dem echten Projekt, das beim Seiten-Scroll leicht parallaxt.
 export default function HomeScreenSim() {
-  const [variantIndex, setVariantIndex] = useState(0);
-  const total = Math.max(BORDERS.length, FACES.length);
+  const [borderIndex, setBorderIndex] = useState(0);
+  const [faceIndex, setFaceIndex] = useState(0);
   const randomizeVariant = () => {
-    setVariantIndex((prev) => {
-      if (total <= 1) return prev;
-      let next = prev;
-      while (next === prev) {
-        next = Math.floor(Math.random() * total);
-      }
-      return next;
-    });
+    setBorderIndex((prev) => randomNextIndex(prev, BORDERS.length));
+    setFaceIndex((prev) => randomNextIndex(prev, FACES.length));
   };
-  const borderImage = `/logo/${BORDERS[variantIndex % BORDERS.length]}.png`;
-  const faceImage = `/logo/${FACES[variantIndex % FACES.length]}.png`;
+  const borderImage = `/logo/${BORDERS[borderIndex]}.png`;
+  const faceImage = `/logo/${FACES[faceIndex]}.png`;
 
   const { scrollYProgress } = useScroll();
   const mgY = useTransform(scrollYProgress, [0, 1], [0, -70]);
