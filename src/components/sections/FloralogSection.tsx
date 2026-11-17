@@ -146,7 +146,6 @@ export default function FloralogSection() {
   });
 
   const phoneY = useTransform(stickyProgress, [0, 1], [60, -10]);
-  const phoneRotate = useTransform(stickyProgress, [0, 0.5, 1], [-2, 0, 2]);
   // Fortschritt innerhalb des Explore-Screens (mittleres Drittel) fürs simulierte Sammlung-Scrollen.
   const collectionScrollProgress = useTransform(stickyProgress, [1 / screens.length, 2 / screens.length], [0, 1]);
   // Title starts above phone, moves further up as phone rises over it
@@ -197,20 +196,6 @@ export default function FloralogSection() {
         className="relative"
         style={{ height: `${screens.length * 100}vh` }}
       >
-        {/* Background */}
-        <div
-          className="absolute pointer-events-none inset-0"
-          style={{
-            background: 'linear-gradient(180deg, transparent 0%, #0c0f0a 20%, #0c0f0a 80%, #000000 100%)',
-          }}
-        />
-        <div
-          className="absolute pointer-events-none inset-0"
-          style={{
-            backgroundImage: `radial-gradient(circle at 50% 50%, rgba(80,140,80,0.04) 0%, transparent 60%)`,
-          }}
-        />
-
         {/* Sticky viewport — items-start so content begins near top */}
         <div className="sticky top-0 flex items-start" style={{ height: '100vh', paddingTop: 'clamp(72px, 9vh, 96px)' }}>
           <div
@@ -254,7 +239,9 @@ export default function FloralogSection() {
 
               {/* Phone — absolute, centered horizontally, overlaps title from below */}
               <div style={{ position: 'absolute', top: 'calc(30px + 8vh)', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2 }}>
-                <motion.div style={{ y: phoneY, rotate: phoneRotate, scale: phoneScale }}>
+                {/* Bewusst ohne Scroll-Rotation und ohne eigenen Section-Hintergrund: beides hat Firefox gezwungen,
+                    Phone bzw. 300vh-Verläufe jeden Frame neu zu rendern. */}
+                <motion.div style={{ y: phoneY, scale: phoneScale }}>
                   <DeviceMockup screens={phoneScreens} activeScreen={activeScreen} />
                 </motion.div>
               </div>

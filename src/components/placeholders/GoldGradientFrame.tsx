@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { isFirefox } from '../../utils/browser';
 
 interface Props {
   children: ReactNode;
@@ -22,9 +23,10 @@ export default function GoldGradientFrame({ children, className = '', blur = fal
       <div
         style={{
           borderRadius: `calc(${rounded} - 1px)`,
-          background: blur ? 'rgba(10,12,8,0.75)' : 'rgba(10,12,8,0.92)',
-          backdropFilter: blur ? 'blur(14px)' : undefined,
-          WebkitBackdropFilter: blur ? 'blur(14px)' : undefined,
+          // Firefox: kein Backdrop-Blur (extrem teuer im rotierenden Phone), dafür etwas deckender.
+          background: blur ? (isFirefox ? 'rgba(10,12,8,0.86)' : 'rgba(10,12,8,0.75)') : 'rgba(10,12,8,0.92)',
+          backdropFilter: blur && !isFirefox ? 'blur(8px)' : undefined,
+          WebkitBackdropFilter: blur && !isFirefox ? 'blur(8px)' : undefined,
         }}
       >
         {children}

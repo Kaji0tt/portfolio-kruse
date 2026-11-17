@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from 'react';
 import { motion, useInView } from 'framer-motion';
+import { isFirefox } from '../../utils/browser';
 
 interface Screen {
   label: string;
@@ -36,15 +37,37 @@ export default function DeviceMockup({
   const isFloating = floating && inView;
 
   return (
-    <motion.div
+    <div
       ref={rootRef}
       className={`relative inline-block ${className}`}
-      animate={isFloating ? { y: [0, -12, 0], rotateY: [-2, 2, -2], rotateX: [1, -1, 1] } : undefined}
-      transition={isFloating ? { duration: 7, repeat: Infinity, ease: 'easeInOut' } : undefined}
-      // Kein preserve-3d/perspective: Kinder haben keine eigenen 3D-Transforms, die Optik bleibt gleich,
-      // aber der Browser muss keinen 3D-Rendering-Context samt Backdrop-Blur pro Frame neu flatten.
-      style={{ willChange: 'transform' }}
+      // Float als reine CSS-Animation (nur translateY): läuft im Compositor-Thread, ohne JS pro Frame
+      // und ohne Neu-Rastern. Das frühere rotateX/rotateY (±1-2°) war ohne Perspektive optisch
+      // nicht sichtbar (cos 2° ≈ 0.9994), hat aber 3D-Rendering erzwungen.
+      style={{
+        willChange: 'transform',
+        animation: isFloating ? 'deviceFloat 7s ease-in-out infinite' : undefined,
+      }}
     >
+      <style>{`
+        @keyframes deviceFloat {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-12px); }
+        }
+      `}</style>
+      {/* Weicher Drop-Shadow als eigene, statische Ebene hinter dem Phone: wird einmal gerastert und dann
+          nur mitbewegt, statt bei jeder Änderung im Screen-Inhalt mit neu gerendert zu werden. */}
+      <div
+        aria-hidden
+        className="absolute rounded-[44px] pointer-events-none"
+        style={{
+          left: 0,
+          top: 0,
+          width: '260px',
+          height: '530px',
+          boxShadow: '0 40px 80px rgba(0,0,0,0.6), 0 20px 40px rgba(0,0,0,0.4)',
+          willChange: 'transform',
+        }}
+      />
       {/* Phone outer frame */}
       <div
         className="relative rounded-[44px] overflow-hidden"
@@ -52,11 +75,10 @@ export default function DeviceMockup({
           width: '260px',
           height: '530px',
           background: 'linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 40%, #222 100%)',
+          // Nur noch die scharfen Ringe + Inset-Highlight - der große Blur-Schatten liegt auf der Ebene oben.
           boxShadow: `
             0 0 0 1px rgba(255,255,255,0.06),
             0 0 0 2px rgba(0,0,0,0.8),
-            0 40px 80px rgba(0,0,0,0.6),
-            0 20px 40px rgba(0,0,0,0.4),
             inset 0 1px 0 rgba(255,255,255,0.08)
           `,
         }}
@@ -271,10 +293,13 @@ export default function DeviceMockup({
           transform: 'translateX(-50%)',
           width: '160px',
           height: '20px',
-          background: 'radial-gradient(ellipse, rgba(240,237,232,0.06) 0%, transparent 70%)',
-          filter: 'blur(8px)',
+          // Firefox: weicher Verlauf statt filter: blur (wird sonst pro Frame neu gerendert, da das Phone rotiert).
+          background: isFirefox
+            ? 'radial-gradient(ellipse, rgba(240,237,232,0.045) 0%, rgba(240,237,232,0.02) 45%, transparent 85%)'
+            : 'radial-gradient(ellipse, rgba(240,237,232,0.06) 0%, transparent 70%)',
+          filter: isFirefox ? undefined : 'blur(8px)',
         }}
       />
-    </motion.div>
+    </div>
   );
 }

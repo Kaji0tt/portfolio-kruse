@@ -1,4 +1,5 @@
 import { Leaf, MapPin } from 'lucide-react';
+import { isFirefox } from '../../utils/browser';
 
 // Statischer Nachbau des Map-/Zonen-Screens: abstrahierte Karte mit Zonen-Kreisen und Fund-Markern,
 // fokussiert auf das Gamification-Element (Zonen-Boni, Tages-Challenge) statt einen echten Leaflet-Ausschnitt.
@@ -115,9 +116,9 @@ export default function MapScreenSim() {
           right: '10px',
           borderRadius: '14px',
           border: '1px solid rgba(212,168,83,0.3)',
-          background: 'rgba(10,12,8,0.85)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          background: isFirefox ? 'rgba(10,12,8,0.92)' : 'rgba(10,12,8,0.85)',
+          backdropFilter: isFirefox ? undefined : 'blur(8px)',
+          WebkitBackdropFilter: isFirefox ? undefined : 'blur(8px)',
           padding: '10px 12px',
         }}
       >

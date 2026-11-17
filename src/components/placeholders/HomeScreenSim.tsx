@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import GoldGradientFrame from './GoldGradientFrame';
 
@@ -18,7 +17,8 @@ function randomNextIndex(currentIndex: number, total: number) {
 }
 
 // Statischer Nachbau des Home-Screens: individualisierbares Logo (Plant/Border/Face-Layer) vor dem
-// Guestfunnel-Ebenensystem (bg/mg/fg) aus dem echten Projekt, das beim Seiten-Scroll leicht parallaxt.
+// Guestfunnel-Ebenensystem (bg/mg/fg) aus dem echten Projekt. Bewusst ohne Scroll-Parallax:
+// bewegte Ebenen im Phone zwingen v.a. Firefox, das Phone jeden Frame neu zu rendern.
 export default function HomeScreenSim() {
   const [borderIndex, setBorderIndex] = useState(0);
   const [faceIndex, setFaceIndex] = useState(0);
@@ -29,15 +29,11 @@ export default function HomeScreenSim() {
   const borderImage = `/logo/${BORDERS[borderIndex]}.png`;
   const faceImage = `/logo/${FACES[faceIndex]}.png`;
 
-  const { scrollYProgress } = useScroll();
-  const mgY = useTransform(scrollYProgress, [0, 1], [0, -70]);
-  const fgY = useTransform(scrollYProgress, [0, 1], [0, -160]);
-
   return (
     <div style={{ width: '100%', height: '100%', borderRadius: '32px', overflow: 'hidden', position: 'relative', background: '#0c0f0a' }}>
-      {/* Guestfunnel-Layersystem: bg fix, mg/fg scrollen stark mit fürs Tiefengefühl des Originals */}
+      {/* Guestfunnel-Layersystem: bg/mg/fg statisch gestapelt */}
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/guestfunnel/bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-      <motion.div style={{ position: 'absolute', inset: '-18%', y: mgY, willChange: 'transform', backgroundImage: 'url(/guestfunnel/mg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      <div style={{ position: 'absolute', inset: '-18%', backgroundImage: 'url(/guestfunnel/mg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(4,10,6,0.5)' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(5,15,8,0.88) 0%, rgba(5,15,8,0.5) 45%, transparent 80%)' }} />
 
@@ -101,8 +97,8 @@ export default function HomeScreenSim() {
         </div>
       </div>
 
-      <motion.div
-        style={{ position: 'absolute', inset: '-18%', y: fgY, willChange: 'transform', backgroundImage: 'url(/guestfunnel/fg.png)', backgroundSize: 'cover', backgroundPosition: 'center', pointerEvents: 'none', zIndex: 5 }}
+      <div
+        style={{ position: 'absolute', inset: '-18%', backgroundImage: 'url(/guestfunnel/fg.png)', backgroundSize: 'cover', backgroundPosition: 'center', pointerEvents: 'none', zIndex: 5 }}
       />
     </div>
   );
