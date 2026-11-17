@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { motion } from 'framer-motion';
+import { useRef, type ReactNode } from 'react';
+import { motion, useInView } from 'framer-motion';
 
 interface Screen {
   label: string;
@@ -30,13 +30,20 @@ export default function DeviceMockup({
   floating = true,
 }: Props) {
   const screen = screens[activeScreen] || screens[0];
+  const rootRef = useRef<HTMLDivElement>(null);
+  // Endlos-Float nur laufen lassen, solange das Phone sichtbar ist.
+  const inView = useInView(rootRef, { margin: '200px 0px' });
+  const isFloating = floating && inView;
 
   return (
     <motion.div
+      ref={rootRef}
       className={`relative inline-block ${className}`}
-      animate={floating ? { y: [0, -12, 0], rotateY: [-2, 2, -2], rotateX: [1, -1, 1] } : {}}
-      transition={floating ? { duration: 7, repeat: Infinity, ease: 'easeInOut' } : {}}
-      style={{ transformStyle: 'preserve-3d', perspective: '1000px' }}
+      animate={isFloating ? { y: [0, -12, 0], rotateY: [-2, 2, -2], rotateX: [1, -1, 1] } : undefined}
+      transition={isFloating ? { duration: 7, repeat: Infinity, ease: 'easeInOut' } : undefined}
+      // Kein preserve-3d/perspective: Kinder haben keine eigenen 3D-Transforms, die Optik bleibt gleich,
+      // aber der Browser muss keinen 3D-Rendering-Context samt Backdrop-Blur pro Frame neu flatten.
+      style={{ willChange: 'transform' }}
     >
       {/* Phone outer frame */}
       <div
@@ -87,7 +94,11 @@ export default function DeviceMockup({
                     key={i}
                     className="absolute inset-0"
                     style={{ padding: '10px', pointerEvents: i === activeScreen ? 'auto' : 'none' }}
-                    animate={{ opacity: i === activeScreen ? 1 : 0 }}
+                    // Nach dem Ausblenden visibility:hidden, damit inaktive Screens (Backdrop-Blur, Parallax) nicht weiter gezeichnet werden.
+                    initial={false}
+                    animate={i === activeScreen
+                      ? { opacity: 1, visibility: 'visible' }
+                      : { opacity: 0, transitionEnd: { visibility: 'hidden' } }}
                     transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   >
                     {s.image ? (

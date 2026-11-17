@@ -37,7 +37,7 @@ export default function HomeScreenSim() {
     <div style={{ width: '100%', height: '100%', borderRadius: '32px', overflow: 'hidden', position: 'relative', background: '#0c0f0a' }}>
       {/* Guestfunnel-Layersystem: bg fix, mg/fg scrollen stark mit fürs Tiefengefühl des Originals */}
       <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(/guestfunnel/bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
-      <motion.div style={{ position: 'absolute', inset: '-18%', y: mgY, backgroundImage: 'url(/guestfunnel/mg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      <motion.div style={{ position: 'absolute', inset: '-18%', y: mgY, willChange: 'transform', backgroundImage: 'url(/guestfunnel/mg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(4,10,6,0.5)' }} />
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(5,15,8,0.88) 0%, rgba(5,15,8,0.5) 45%, transparent 80%)' }} />
 
@@ -102,7 +102,7 @@ export default function HomeScreenSim() {
       </div>
 
       <motion.div
-        style={{ position: 'absolute', inset: '-18%', y: fgY, backgroundImage: 'url(/guestfunnel/fg.png)', backgroundSize: 'cover', backgroundPosition: 'center', pointerEvents: 'none', zIndex: 5 }}
+        style={{ position: 'absolute', inset: '-18%', y: fgY, willChange: 'transform', backgroundImage: 'url(/guestfunnel/fg.png)', backgroundSize: 'cover', backgroundPosition: 'center', pointerEvents: 'none', zIndex: 5 }}
       />
     </div>
   );

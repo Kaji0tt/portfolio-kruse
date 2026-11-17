@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useMemo } from 'react';
 import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { Compass, TrendingUp } from 'lucide-react';
 import DeviceMockup from '../placeholders/DeviceMockup';
@@ -149,12 +149,6 @@ export default function FloralogSection() {
   const phoneRotate = useTransform(stickyProgress, [0, 0.5, 1], [-2, 0, 2]);
   // Fortschritt innerhalb des Explore-Screens (mittleres Drittel) fürs simulierte Sammlung-Scrollen.
   const collectionScrollProgress = useTransform(stickyProgress, [1 / screens.length, 2 / screens.length], [0, 1]);
-  const phoneScreens = screens.map((screen, i) => {
-    if (i === 0) return { ...screen, content: <HomeScreenSim /> };
-    if (i === 1) return { ...screen, content: <CollectionScreenSim progress={collectionScrollProgress} /> };
-    if (i === 2) return { ...screen, content: <MapScreenSim /> };
-    return screen;
-  });
   // Title starts above phone, moves further up as phone rises over it
   const titleY = useTransform(stickyProgress, [0, 1], [-20, -70]);
   const titleOpacity = useTransform(stickyProgress, [0, 0.4, 1], [1, 0.65, 0.2]);
@@ -171,6 +165,8 @@ export default function FloralogSection() {
       } else if (index === 2) {
         setPingTriggers(t => { const n = [...t]; n[3]++; return n; });
       }
+      // Nur bei echtem Wechsel setzen - nicht bei jedem Scroll-Frame.
+      setActiveScreen(index);
     }
     // Flow-Diagramm lebt jetzt in Screen 0 (Home) - Ping kurz nach Betreten des ersten Drittels statt bei 0.5.
     if (latest >= 1 / (2 * screens.length) && !prevFlowVisible.current) {
@@ -178,8 +174,15 @@ export default function FloralogSection() {
       setFlowVisible(true);
       prevFlowVisible.current = true;
     }
-    setActiveScreen(index);
   });
+
+  // phoneScreens nur neu bauen, wenn sich wirklich etwas ändert (nicht bei jedem Hover-Re-Render).
+  const phoneScreens = useMemo(() => screens.map((screen, i) => {
+    if (i === 0) return { ...screen, content: <HomeScreenSim /> };
+    if (i === 1) return { ...screen, content: <CollectionScreenSim progress={collectionScrollProgress} /> };
+    if (i === 2) return { ...screen, content: <MapScreenSim /> };
+    return screen;
+  }), [collectionScrollProgress]);
 
   return (
     <section
@@ -416,10 +419,10 @@ export default function FloralogSection() {
                   <motion.div
                     key={i}
                     style={{ gridArea: '1/1', pointerEvents: i === activeScreen ? 'auto' : 'none' }}
-                    animate={{
-                      opacity: i === activeScreen ? 1 : 0,
-                      y: i === activeScreen ? 0 : (i < activeScreen ? -8 : 12),
-                    }}
+                    initial={false}
+                    animate={i === activeScreen
+                      ? { opacity: 1, y: 0, visibility: 'visible' }
+                      : { opacity: 0, y: i < activeScreen ? -8 : 12, transitionEnd: { visibility: 'hidden' } }}
                     transition={{ duration: 0.5, ease: EASE }}
                   >
                     <p
@@ -505,7 +508,10 @@ export default function FloralogSection() {
 
           {/* CSV Data panel — Screen 1 (Explore): taxonomy data, alongside the collection simulation */}
           <motion.div
-            animate={{ opacity: activeScreen === 1 ? 1 : 0, y: activeScreen === 1 ? 0 : 10 }}
+            initial={false}
+            animate={activeScreen === 1
+              ? { opacity: 1, y: 0, visibility: 'visible' }
+              : { opacity: 0, y: 10, transitionEnd: { visibility: 'hidden' } }}
             transition={{ duration: 0.6, ease: EASE }}
             style={{
               position: 'absolute',
@@ -563,7 +569,10 @@ export default function FloralogSection() {
 
           {/* KPI image panel — Screen 0 (Home): user flow data, origin node matches the Home label */}
           <motion.div
-            animate={{ opacity: activeScreen === 0 ? 1 : 0, y: activeScreen === 0 ? 0 : 10 }}
+            initial={false}
+            animate={activeScreen === 0
+              ? { opacity: 1, y: 0, visibility: 'visible' }
+              : { opacity: 0, y: 10, transitionEnd: { visibility: 'hidden' } }}
             transition={{ duration: 0.6, ease: EASE }}
             style={{
               position: 'absolute',
@@ -610,7 +619,7 @@ export default function FloralogSection() {
                         strokeOpacity={lineOpacity}
                         strokeWidth={0.5 + (edge.weight / MAX_FLOW) * 1.2}
                         strokeDasharray="3 6"
-                        style={isFlowing && flowVisible ? { animation: 'floralogDashFlow 1.2s linear infinite' } : undefined}
+                        style={isFlowing && flowVisible && activeScreen === 0 ? { animation: 'floralogDashFlow 1.2s linear infinite' } : undefined}
                       />
                     </motion.g>
                   );
