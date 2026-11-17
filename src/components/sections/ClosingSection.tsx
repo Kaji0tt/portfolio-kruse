@@ -10,7 +10,9 @@ export default function ClosingSection() {
   });
 
   // Zipper: name/roles from above, CTA/attribution/lines from below
-  const elemOpacity  = useTransform(scrollYProgress, [0, 0.28], [0, 1]);
+  // Funktions-Transform statt [0, 0.28] → [0, 1]: Framer würde opacity sonst als native ScrollTimeline
+  // beschleunigen und dabei falsch abbilden (wieder Ausblenden bis zum Seitenende). So bleibt alles bei 1.
+  const elemOpacity  = useTransform(scrollYProgress, (v) => Math.min(1, Math.max(0, v / 0.28)));
   const nameBlockY   = useTransform(scrollYProgress, [0, 0.68], [-100, 0]);
   const topLineY     = useTransform(scrollYProgress, [0, 0.62], [-160, 0]);
   const ctaY         = useTransform(scrollYProgress, [0, 0.68], [80,   0]);
